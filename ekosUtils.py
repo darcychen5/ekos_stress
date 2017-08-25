@@ -365,6 +365,22 @@ class Utils:
 				error('ssh command failed!')
 				error(rtn)
 				return False
+
+		#set HA failover time
+		cmd = "ekoslet cluster set kube_controller_node_monitor_period 2s"
+		self.ssh_cmd(deploy_ip,username,password,cmd)
+
+		cmd = "ekoslet  cluster set kube_controller_node_monitor_grace_period 20s"
+		self.ssh_cmd(deploy_ip,username,password,cmd)
+
+		cmd = "ekoslet  cluster set kube_controller_pod_eviction_timeout 30s" 
+		self.ssh_cmd(deploy_ip,username,password,cmd)
+
+		cmd = "ekoslet  cluster set kubelet_status_update_frequency 4s"
+		self.ssh_cmd(deploy_ip,username,password,cmd)
+
+
+
 		#install ceph cluster
 		cmd = "ekoslet ceph init rgw:" + ceph_list['rgw'] + ":mon:" + ceph_list['mon'] + ":osd:" + ceph_list['osd']
 		rtn = self.ssh_cmd(deploy_ip,username,password,cmd)
