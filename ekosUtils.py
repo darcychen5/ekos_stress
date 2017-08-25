@@ -518,6 +518,24 @@ class Utils:
 		except:
 			pass
 		return True
+	def get_all_app(self,ip,namespace="default"):
+		app_list = []
+		url = "http://" +ip + ":30000/service/stack/api/stack"
+		params = "namespace=" + namespace + "&page=1&itemsPerPage=1000000"
+		rtn = self.call_rest_api(url,"GET",params=params)
+		for app in json.loads(rtn)['stacks']:
+			app_list.append(app['name'])
+		if not app_list:
+			info("No app detected!")
+			return None
+		return app_list
+	def delete_all_app(self,ip):
+		app_list = self.get_all_app(ip)
+		if app_list:
+			for app in app_list:
+				self.delete_app(ip,app)
+			return True
+
 
 	def get_all_app_name(self,ip):
 		pass
@@ -729,7 +747,7 @@ class Utils:
 		self.delete_all_lb(ip)
 		time.sleep(5)
 
-		self.delete_app(ip,"stress-app")
+		self.delete_all_app(ip)
 		self.bar_sleep(60)
 
 		self.remove_all_volume(ip)
