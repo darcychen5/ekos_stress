@@ -6,7 +6,7 @@ my_utils = ekosUtils.Utils()
 
 ip = sys.argv[1]
 testbed = sys.argv[2]
-svc_num = 60
+svc_num = 300
 stress_svcname_tmp = "stress-bootstorm-"
 
 
@@ -43,8 +43,8 @@ def run_test():
 		else:
 			return False
 
-		info('sleep 1200 seconds')
-		my_utils.bar_sleep(600)
+	info('sleep 600 seconds after creating all(300) stress_svc')
+	my_utils.bar_sleep(600)
 	
 	
 	#get app name
@@ -65,7 +65,7 @@ def run_test():
 		return False
 	"""
 	#let runnning 30 min
-	my_utils.bar_sleep(600)
+	my_utils.bar_sleep(1800)
 	
 	print "check_service_status after runnning 30 min"	
 	#check app status

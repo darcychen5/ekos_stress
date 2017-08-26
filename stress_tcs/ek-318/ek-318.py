@@ -3,13 +3,13 @@ sys.path.insert(0, '/root/ekos_stress/')
 import ekosUtils
 from log import *
 
-stress_node_list = [{'name': 'stress1','vm':["EKOS-Offline-Stress-12","EKOS-Offline-Stress-13","EKOS-Offline-Stress-14"]},{'name': 'stress2','vm':["EKOS-Offline-Stress-17","EKOS-Offline-Stress-18","EKOS-Offline-Stress-19"]},{'name': 'stress3','vm':["EKOS-offline-darcy-62","EKOS-offline-darcy-63","EKOS-offline-darcy-64"]}]
+stress_node_list = [{'name': 'stress1','vm':["EKOS-Offline-Stress-12","EKOS-Offline-Stress-13","EKOS-Offline-Stress-14"]},{'name': 'stress2','vm':["EKOS-Offline-Stress-17","EKOS-Offline-Stress-18","EKOS-Offline-Stress-19"]},{'name': 'stress3','vm':["EKOS-offline-darcy-62","EKOS-offline-darcy-63","EKOS-offline-darcy-64"]},{'name': 'stress4','vm':["EKOS-offline-Stress-10-84","EKOS-offline-Stress-10-85","EKOS-offline-Stress-10-86","EKOS-offline-Stress-10-87","EKOS-offline-Stress-10-88","EKOS-offline-Stress-10-89"]}]
 
 
 ip = sys.argv[1]
 testbed = sys.argv[2]
 stress_svcname_tmp = "stress-powercycle-"
-svc_num = 150
+svc_num = 300
 my_utils = ekosUtils.Utils()
 node_list = []
 for my_list in stress_node_list:
@@ -27,7 +27,7 @@ def run_test():
 	cookies = my_utils._get_cookie(ip)
 	my_utils.create_app(ip,app_name)
 
-	info('sleep 1200 seconds')
+	info('sleep 10 seconds after creating stress_app')
 	my_utils.bar_sleep(10)
 
 	#create stress_svc 	
@@ -42,11 +42,11 @@ def run_test():
 		else:
 			return False
 
-		info('sleep 1200 seconds')
-		my_utils.bar_sleep(10)
+		info('sleep 5 seconds after creating stress_svc')
+		my_utils.bar_sleep(5)
 
-	info('sleep 1200 seconds')
-	my_utils.bar_sleep(600)
+	info('sleep 1200 seconds after creating all (300) stress_svc ')
+	my_utils.bar_sleep(1200)
 
 	#get app name
 	svc_list = []

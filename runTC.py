@@ -2,7 +2,7 @@ import os,sys,time,ekosUtils,re
 from log import *
 
 #stress testbed
-testbed_list = [{'name': 'stress1','masterip': '192.168.27.11'},{'name':'stress2','masterip': '192.168.27.16'},{'name':'stress3','masterip': '192.168.20.61'}]
+testbed_list = [{'name': 'stress1','masterip': '192.168.27.11'},{'name':'stress2','masterip': '192.168.27.16'},{'name':'stress3','masterip': '192.168.20.61'},{'name':'stress4','masterip': '192.168.10.81'}]
 
 
 

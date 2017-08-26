@@ -4,11 +4,11 @@ import ekosUtils
 from log import *
 my_utils = ekosUtils.Utils()
 
-stress_node_list = [{'name': 'stress1','vm':["EKOS-Offline-Stress-12","EKOS-Offline-Stress-13","EKOS-Offline-Stress-14"]},{'name': 'stress2','vm':["EKOS-Offline-Stress-17","EKOS-Offline-Stress-18","EKOS-Offline-Stress-19"]},{'name': 'stress3','vm':["EKOS-offline-darcy-62","EKOS-offline-darcy-63","EKOS-offline-darcy-64"]}]
+stress_node_list = [{'name': 'stress1','vm':["EKOS-Offline-Stress-12","EKOS-Offline-Stress-13","EKOS-Offline-Stress-14"]},{'name': 'stress2','vm':["EKOS-Offline-Stress-17","EKOS-Offline-Stress-18","EKOS-Offline-Stress-19"]},{'name': 'stress3','vm':["EKOS-offline-darcy-62","EKOS-offline-darcy-63","EKOS-offline-darcy-64"]},{'name': 'stress4','vm':["EKOS-offline-Stress-10-84","EKOS-offline-Stress-10-85","EKOS-offline-Stress-10-86","EKOS-offline-Stress-10-87","EKOS-offline-Stress-10-88","EKOS-offline-Stress-10-89"]}]
 
 ip = sys.argv[1]
 testbed = sys.argv[2] 
-svc_num = 200
+svc_num = 10
 stress_svcname_tmp = "stress-svc-ha-"
 node_list = []
 
@@ -42,10 +42,10 @@ def run_test():
 			return False
 
 		info('sleep 1200 seconds')
-		my_utils.bar_sleep(10)
+		my_utils.bar_sleep(5)
 
 	info('sleep 1200 seconds')
-	my_utils.bar_sleep(800)
+	my_utils.bar_sleep(120)
 
 	#get svc name
 	svc_list = []
@@ -73,7 +73,7 @@ def run_test():
 		my_utils.poweroff_vm(poweroff_node)
 
 	info("sleep 1800 seconds")
-	my_utils.bar_sleep(600)
+	my_utils.bar_sleep(120)
 	
 	#check pods status
 	rtn = my_utils.check_service_status(ip,svc_list)
