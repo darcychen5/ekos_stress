@@ -2,7 +2,7 @@ import sys,json,time,random
 sys.path.insert(0, '/root/ekos_stress/')
 import ekosUtils
 from log import *
-stress_node_list = [{'name': 'stress1','vm':["EKOS-Offline-Stress-12","EKOS-Offline-Stress-13","EKOS-Offline-Stress-14"]},{'name': 'stress2','vm':["EKOS-Offline-Stress-17","EKOS-Offline-Stress-18","EKOS-Offline-Stress-19"]},{'name': 'stress3','vm':["EKOS-offline-darcy-62","EKOS-offline-darcy-63","EKOS-offline-darcy-64"]}]
+stress_node_list = [{'name': 'stress1','vm':["EKOS-Offline-Stress-12","EKOS-Offline-Stress-13","EKOS-Offline-Stress-14"]},{'name': 'stress2','vm':["EKOS-Offline-Stress-17","EKOS-Offline-Stress-18","EKOS-Offline-Stress-19"]},{'name': 'stress3','vm':["EKOS-offline-darcy-62","EKOS-offline-darcy-63","EKOS-offline-darcy-64"]},{'name': 'stress4','vm':["EKOS-offline-Stress-10-84","EKOS-offline-Stress-10-85","EKOS-offline-Stress-10-86","EKOS-offline-Stress-10-87","EKOS-offline-Stress-10-88","EKOS-offline-Stress-10-89"]}]
 ip = sys.argv[1]
 testbed = sys.argv[2]
 my_utils = ekosUtils.Utils()
@@ -10,9 +10,9 @@ my_utils = ekosUtils.Utils()
 
 def run_test():
 	volume_prefix = "volume-"
-	app_prefix = "stress-nfs-"
+	svc_prefix = "stress-nfs-"
 	volume_number = 1
-	app_num = 200
+	svc_num = 5
 	nfs_name = "darcy-nfs"
 
 	#add nfs 
@@ -23,7 +23,7 @@ def run_test():
 		error('create nfs storage failed!')
 		return False
 	info('create nfs storage done')
-	my_utils.bar_sleep(120)
+	my_utils.bar_sleep(60)
 
 	#check nfs
 	rtn = my_utils.get_nfs_status(ip,nfs_name)
@@ -40,15 +40,20 @@ def run_test():
 	my_utils.bar_sleep(60)
 	
 	#create app	
+	my_utils.create_app(ip,"stress-app")
+	my_utils.bar_sleep(5)
+	
+	#create svc
 	url = "http://" + ip + ":30000/service/stack/api/app" 
-	obj_json = {"name":"hello-test","namespace":"default","stateful":"share","replicas":1,"cpu":125,"memory":128,"diskSize":20000,"containers":[{"name":"hello-test","image":"registry.ekos.local/library/stress_centos:latest","command":"","envs":[],"logDir":"","healthCheck":None,"cpuPercent":100,"memPercent":100}],"service":{"ports":[{"protocol":"TCP","containerPort":80,"servicePort":999}]},"volumes":[{"persistentVolumeClaim":{"claimName":"volume-1","mountPath":"/mnt/volume/","readOnly":False}}],"desc":""}
-	
+	#obj_json = {"name":"stress-svc-ha-1","namespace":"default","stack":"stress-app","stateful":"none","replicas":1,"cpu":125,"memory":64,"diskSize":20000,"containers":[{"name":"hello-test-4","image":"registry.ekos.local/library/stress_centos:latest","command":"","envs":[],"logDir":"","healthCheck":None,"cpuPercent":100,"memPercent":100,"stdin":False,"tty":False,"cfgFileMounts":[],"secretMounts":[]}],"service":{"ports":[{"protocol":"TCP","containerPort":88,"servicePort":888}]},"volumes":[],"desc":""}
+	obj_json = {"name":"stress-test-2","namespace":"default","stack":"stress-app","stateful":"share","replicas":1,"cpu":125,"memory":64,"diskSize":20000,"containers":[{"name":"stress-test-4","image":"registry.ekos.local/library/stress_centos:latest","command":"sh","envs":[],"logDir":"","healthCheck":None,"cpuPercent":100,"memPercent":100,"stdin":False,"tty":False,"cfgFileMounts":[],"secretMounts":[]}],"service":{"ports":[{"protocol":"TCP","containerPort":88,"servicePort":888}]},"volumes":[{"persistentVolumeClaim":{"claimName":"volume-test-2","mountPath":"/mnt/volume/","readOnly":False}}],"desc":""}
+
 	volume_list = my_utils.get_nfs_volume_name(ip,nfs_name)
-	app_list = []
+	svc_list = []
 	
-	for i in range(app_num):
-		obj_json['name'] = app_prefix + str(i)
-		app_list.append(obj_json['name'])
+	for i in range(svc_num):
+		obj_json['name'] = svc_prefix + str(i)
+		svc_list.append(obj_json['name'])
 		obj_json['volumes'][0]['persistentVolumeClaim']['claimName'] = full_volume_name
 		rtn = my_utils.call_rest_api(url,"POST",json=json.dumps(obj_json))
 		if "success" in json.loads(rtn)['status']:
@@ -56,18 +61,18 @@ def run_test():
 		else:
 			return False
 	
-	my_utils.bar_sleep(600)
+	my_utils.bar_sleep(60)
 	
-	#check app status
-	rtn = my_utils.check_app_status(ip,app_list)
+	#check svc status
+	rtn = my_utils.check_service_status(ip,svc_list)
 	if rtn != True:
 		return False
 	
 	#let runnning 30 min
-	my_utils.bar_sleep(1800)
+	my_utils.bar_sleep(60)
 
-	#check 
-	rtn = my_utils.check_app_status(ip,app_list)
+	#check svc status
+	rtn = my_utils.check_service_status(ip,svc_list)
 	if rtn != True:
 		return False
 	nfs_list = my_utils.get_nfs_list(ip)
@@ -83,4 +88,4 @@ if rtn == True:
 	my_utils.clean_testbed(ip)
 	info('ok')
 else:
-	error('run test case ek-690 failed!')
+	error('run test case ek-626 failed!')
