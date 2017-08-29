@@ -35,7 +35,7 @@ testbed_name = my_testbed['name']
 test_build = my_utils.get_latest_build()
 if str(refresh_testbed) == "True" or str(refresh_testbed) == "true":
 	info('refresh testbed!')
-	cmd = "python /root/ekos_stress/install/install_ekos.py " + testbed_name
+	cmd = "unbuffer python /root/ekos_stress/install/install_ekos.py " + testbed_name + " >/tmp/install.log"
 	rtn = my_utils.runcmd(cmd)
 	info(rtn)
 	if rtn == False:

@@ -389,23 +389,24 @@ class Utils:
 				error('ssh command failed!')
 				error(rtn)
 				return False
+		if "-" in ceph_list['rgw'] or "," in ceph_list['rgw']:
 		#set ceph port
-		cmd = "ekoslet cluster set rgwvip:port 7580"
-		rtn = self.ssh_cmd(deploy_ip,username,password,cmd)
-		if rtn:
-			if not rtn.has_key('stdout'):
-				error('ssh command failed!')
-				error(rtn)
-				return False
-
-		#set ceph vip
-		cmd = "ekoslet cluster set rgwvip:address " + ceph_vip
-		rtn = self.ssh_cmd(deploy_ip,username,password,cmd)
-		if rtn:
-			if not rtn.has_key('stdout'):
-				error('ssh command failed!')
-				error(rtn)
-				return False
+			cmd = "ekoslet cluster set rgwvip:port 7580"
+			rtn = self.ssh_cmd(deploy_ip,username,password,cmd)
+			if rtn:
+				if not rtn.has_key('stdout'):
+					error('ssh command failed!')
+					error(rtn)
+					return False
+	
+			#set ceph vip
+			cmd = "ekoslet cluster set rgwvip:address " + ceph_vip
+			rtn = self.ssh_cmd(deploy_ip,username,password,cmd)
+			if rtn:
+				if not rtn.has_key('stdout'):
+					error('ssh command failed!')
+					error(rtn)
+					return False
 
 		#keygen
 		info("generate keygen")
