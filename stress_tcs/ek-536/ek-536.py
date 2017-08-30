@@ -9,101 +9,105 @@ stress_node_list = [{'name': 'stress1','vm':["EKOS-Offline-Stress-12","EKOS-Offl
 ip = sys.argv[1]
 testbed = sys.argv[2]
 stress_svcname_tmp = "stress-powercycle-"
-svc_num = 10
+stress_appname_tmp = "stress-powercycle-app-"
+svc_num = 4
+app_num = 50
 my_utils = ekosUtils.Utils()
 node_list = []
 for my_list in stress_node_list:
-	if my_list['name'] == testbed:
-		node_list = my_list['vm']
-		break
+        if my_list['name'] == testbed:
+                node_list = my_list['vm']
+                break
 if not node_list:
-	error('wrong testbed!')
-	sys.exit()
+        error('wrong testbed!')
+        sys.exit()
 
 
 def run_test():
-	#create stress_app
-	app_name = "stress-app"
-	cookies = my_utils._get_cookie(ip)
-	my_utils.create_app(ip,app_name)
+        #create stress_app
+        cookies = my_utils._get_cookie(ip)
+        for j in range(app_num):
+            app_name = stress_appname_tmp + str(j)
+            my_utils.create_app(ip,app_name)
+            cookies = my_utils._get_cookie(ip)
+            url = "http://" + ip + ":30000/service/stack/api/app"
+            obj_json = {"name":"stress-svc-ha-1","namespace":"default","stack":"stress-app","stateful":"none","replicas":1,"cpu":125,"memory":64,"diskSize":20000,"containers":[{"name":"hello-test-4","image":"registry.ekos.local/library/stress_centos:latest","command":"","envs":[],"logDir":"","healthCheck":None,"cpuPercent":100,"memPercent":100,"stdin":False,"tty":False,"cfgFileMounts":[],"secretMounts":[]}],"service":{"ports":[{"protocol":"TCP","containerPort":88,"servicePort":888}]},"volumes":[],"desc":""}
+            for i in range(svc_num):
+                    obj_json['name'] = "stress" + str(j) + "-powercycle-" + str(i)
+                    obj_json['stack'] = app_name
+                    app_rtn = my_utils.call_rest_api(url,"POST",cookies=cookies,json=json.dumps(obj_json))
+                    if "success" in json.loads(app_rtn)['status']:
+                            info('create application: %s successfully' % obj_json['name'])
+                    else:
+                            return False
 
-	info('sleep 5 seconds')
-	my_utils.bar_sleep(5)
+        info('sleep 120 seconds')
+        my_utils.bar_sleep(120)
 
-	#create stress_svc
-	cookies = my_utils._get_cookie(ip)
-	url = "http://" + ip + ":30000/service/stack/api/app"
-	obj_json = {"name":"stress-svc-ha-1","namespace":"default","stack":"stress-app","stateful":"none","replicas":1,"cpu":125,"memory":64,"diskSize":20000,"containers":[{"name":"container01","image":"registry.ekos.local/library/stress_centos:latest","command":"","envs":[],"logDir":"","healthCheck":None,"cpuPercent":33,"memPercent":33,"stdin":False,"tty":False,"cfgFileMounts":[],"secretMounts":[]},{"name":"container02","image":"registry.ekos.local/library/stress_centos:latest","command":"","envs":[],"logDir":"","healthCheck":None,"cpuPercent":33,"memPercent":33,"stdin":False,"tty":False,"cfgFileMounts":[],"secretMounts":[]},{"name":"container03","image":"registry.ekos.local/library/hello:latest","command":"","envs":[],"logDir":"","healthCheck":None,"cpuPercent":33,"memPercent":33,"stdin":False,"tty":False,"cfgFileMounts":[],"secretMounts":[]}],"service":{"ports":[{"protocol":"TCP","containerPort":666,"servicePort":888}]},"volumes":[],"desc":""}
-	for i in range(svc_num):
-		obj_json['name'] = stress_svcname_tmp + str(i)
-		app_rtn = my_utils.call_rest_api(url,"POST",cookies=cookies,json=json.dumps(obj_json))
-		if "success" in json.loads(app_rtn)['status']:
-			info('create application: %s successfully' % obj_json['name'])
-		else:
-			return False
-	
-	my_utils.bar_sleep(120)
-	
-	#get app name
-	app_list = []
-	for i in range(svc_num):
-		appname = stress_svcname_tmp + str(i)
-		app_list.append(appname)
-	#check app running
-	rtn = my_utils.check_service_status(ip,app_list)
-	if rtn != True:
-		return False
-	
-	#power off nodes sequentially 
-	for node in node_list:
-		rtn = my_utils.poweroff_vm(node)
-		if rtn != True:
-			error("power off node failed!")
-			return False
-		my_utils.bar_sleep(10)
-	
-	info('power off node done,sleep 120 seconds')  
-	my_utils.bar_sleep(120)
-	
-		#power on all nodes
-	
-	for node in node_list:
-		rtn = my_utils.poweron_vm(node)
-		if rtn != True:
-			error('power on node failed')
-			return False
-	
-	info('Power on node done,sleep 3 minutes')
-	my_utils.bar_sleep(180)
-	
-	#check node ready
-	rtn = my_utils.check_node_ready(ip,"root","password")
-	if rtn != True:
-		return False
+        #get app name
+        app_list = my_utils.get_all_app(ip)
+        #check app running
+        for app in app_list:
+            service_name = my_utils.get_service_by_app(ip,app)
+            rtn = my_utils.check_service_status(ip,service_name)
+            if rtn != True:
+                return False
 
-	print "check_app_status begining"
-	
-	rtn = my_utils._get_cookie(ip)
-	#check app status
-	rtn = my_utils.check_service_status(ip,app_list)
-	if rtn != True:
-		return False
-	
-	return True
-	
+        #power off nodes sequentially
+        for node in node_list:
+                rtn = my_utils.poweroff_vm(node)
+                if rtn != True:
+                        error("power off node failed!")
+                        return False
+                my_utils.bar_sleep(10)
+
+        info('power off node done,sleep 120 seconds')
+        my_utils.bar_sleep(120)
+
+                #power on all nodes
+
+        for node in node_list:
+                rtn = my_utils.poweron_vm(node)
+                if rtn != True:
+                        error('power on node failed')
+                        return False
+
+        info('Power on node done,sleep 10 minutes')
+        my_utils.bar_sleep(600)
+
+        #check node ready
+        rtn = my_utils.check_node_ready(ip,"root","password")
+        if rtn != True:
+                return False
+
+        print "check_app_status begining"
+
+        rtn = my_utils._get_cookie(ip)
+        #check app status
+        rtn = my_utils.check_service_status(ip,app_list)
+        if rtn != True:
+                return False
+	else:
+        	return True
+
 
 """
-	rtn = my_utils.k8s_pod_health_check(ip)
-	if rtn != True:
-		return False
-"""	
+        rtn = my_utils.k8s_pod_health_check(ip)
+        if rtn != True:
+                return False
+"""
 
-	
+
 #clean testbed
 #main
 rtn = run_test()
 if rtn == True:
-	my_utils.clean_testbed(ip)
-	info('ok')
+        my_utils.clean_testbed(ip)
+        info('ok')
 else:
-	error('run test case ek-536 failed!')
+        error('run test case ek-536 failed!')
+
+~
+
+~
+
