@@ -8,7 +8,7 @@ stress_node_list = [{'name': 'stress1','vm':["EKOS-Offline-Stress-12","EKOS-Offl
 
 ip = sys.argv[1]
 testbed = sys.argv[2] 
-svc_num = 10
+svc_num = 200
 stress_svcname_tmp = "stress-svc-ha-"
 node_list = []
 
@@ -40,12 +40,15 @@ def run_test():
 			info('create application: %s successfully' %obj_json['name'])
 		else:
 			return False
-
-	info('sleep 120 seconds')
-	my_utils.bar_sleep(120)
+		
+	info('sleeping 600 seconds after creating all svc')
+	my_utils.bar_sleep(600)
 
 	#get svc name
-	svc_list = my_utils.get_service_by_app(app_name)
+	svc_list = []
+	for i in range(svc_num):
+		svcname = stress_svcname_tmp + str(i)
+		svc_list.append(svcname)
 	#check svc running
 	rtn = my_utils.check_service_status(ip,svc_list) #app svc 
 	if rtn != True:
@@ -69,7 +72,7 @@ def run_test():
 	info("sleep 120 seconds")
 	my_utils.bar_sleep(120)
 	
-	#check pods status
+	#check svc status
 	rtn = my_utils.check_service_status(ip,svc_list)
 	if rtn != True:
 		return False
@@ -84,6 +87,7 @@ def run_test():
 	# 	return True
 	# else:
 	# 	return False
+		
 		
 	return True
 

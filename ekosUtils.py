@@ -601,7 +601,7 @@ class Utils:
 	def check_node_ready(self,ip,username,password):
 		node_list = self.get_nodes(ip,username,password)
 		for node in node_list:
-			cmd = "kubectl get nodes | grep " + node + "|grep Ready"
+			cmd = "kubectl get nodes | grep " + node + "|grep -w Ready"
 			rtn = self.ssh_cmd(ip,username,password,cmd)
 			if rtn['stdout'] == "":
 				error("%s is not ready!" % node)

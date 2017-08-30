@@ -9,7 +9,7 @@ stress_node_list = [{'name': 'stress1','vm':["EKOS-Offline-Stress-12","EKOS-Offl
 ip = sys.argv[1]
 testbed = sys.argv[2]
 stress_svcname_tmp = "stress-powercycle-"
-svc_num = 300
+svc_num = 100
 my_utils = ekosUtils.Utils()
 node_list = []
 for my_list in stress_node_list:
@@ -33,7 +33,7 @@ def run_test():
 	#create stress_svc 	
 	cookies = my_utils._get_cookie(ip)
 	url = "http://" + ip + ":30000/service/stack/api/app"
-	obj_json = {"name":"stress-svc-ha-1","namespace":"default","stack":"stress-app","stateful":"none","replicas":1,"cpu":125,"memory":64,"diskSize":20000,"containers":[{"name":"hello-test-4","image":"registry.ekos.local/library/stress_centos:latest","command":"","envs":[],"logDir":"","healthCheck":None,"cpuPercent":100,"memPercent":100,"stdin":False,"tty":False,"cfgFileMounts":[],"secretMounts":[]}],"service":{"ports":[{"protocol":"TCP","containerPort":88,"servicePort":888}]},"volumes":[],"desc":""}
+	obj_json = {"name":"stress-svc-ha-1","namespace":"default","stack":"stress-app","stateful":"none","replicas":1,"cpu":125,"memory":64,"diskSize":20000,"containers":[{"name":"hello-test-4","image":"registry.ekos.local/library/hello:latest","command":"","envs":[],"logDir":"","healthCheck":None,"cpuPercent":100,"memPercent":100,"stdin":False,"tty":False,"cfgFileMounts":[],"secretMounts":[]}],"service":{"ports":[{"protocol":"TCP","containerPort":88,"servicePort":888}]},"volumes":[],"desc":""}
 	for i in range(svc_num):
 		obj_json['name'] = stress_svcname_tmp + str(i)
 		rtn = my_utils.call_rest_api(url,"POST",cookies=cookies,json=json.dumps(obj_json))
@@ -41,12 +41,9 @@ def run_test():
 			info('create application: %s successfully' %obj_json['name'])
 		else:
 			return False
-
-		info('sleep 5 seconds after creating stress_svc')
-		my_utils.bar_sleep(5)
-
-	info('sleep 1200 seconds after creating all (300) stress_svc ')
-	my_utils.bar_sleep(1200)
+	
+	info('sleep 300 seconds after creating all stress_svc ')
+	my_utils.bar_sleep(300)
 
 	#get app name
 	svc_list = []
@@ -67,8 +64,8 @@ def run_test():
 			return False
 		my_utils.bar_sleep(10)
 	
-	info('power off node done,sleep 1200 seconds')  
-	my_utils.bar_sleep(1200)
+	info('power off node done,sleep 60 seconds')  
+	my_utils.bar_sleep(30)
 	
 	#power on all nodes	
 	for node in node_list:
@@ -78,7 +75,7 @@ def run_test():
 			return False
 	
 	info('Power on node done,sleep 6 minutes')
-	my_utils.bar_sleep(1200)
+	my_utils.bar_sleep(300)
 	
 	#check node ready
 	rtn = my_utils.check_node_ready(ip,"root","password")
