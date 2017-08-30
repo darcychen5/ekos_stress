@@ -4,13 +4,13 @@ import ekosUtils
 from log import *
 my_utils = ekosUtils.Utils()
 
-stress_node_list = [{'name': 'stress1','vm':["EKOS-Offline-Stress-12","EKOS-Offline-Stress-13","EKOS-Offline-Stress-14"]},{'name': 'stress2','vm':["EKOS-Offline-Stress-17","EKOS-Offline-Stress-18","EKOS-Offline-Stress-19"]},{'name': 'stress3','vm':["EKOS-offline-darcy-62","EKOS-offline-darcy-63","EKOS-offline-darcy-64"]}]
+stress_node_list = [{'name': 'stress1','vm':["EKOS-Offline-Stress-12","EKOS-Offline-Stress-13","EKOS-Offline-Stress-14"]},{'name': 'stress2','vm':["EKOS-Offline-Stress-17","EKOS-Offline-Stress-18","EKOS-Offline-Stress-19"]},{'name': 'stress3','vm':["EKOS-offline-darcy-62","EKOS-offline-darcy-63","EKOS-offline-darcy-64"]},{'name': 'stress4','vm':["EKOS-offline-Stress-10-84","EKOS-offline-Stress-10-85","EKOS-offline-Stress-10-86","EKOS-offline-Stress-10-87","EKOS-offline-Stress-10-88","EKOS-offline-Stress-10-89"]}]
 
 ip = sys.argv[1]
 testbed = sys.argv[2]
-appname_tmp1 = "stress-bootstorm-pod-eachother-server-"
-appname_tmp2 = "stress-bootstorm-pod-eachother-client-"
-app_num = 150
+svcname_tmp1 = "stress-bootstorm-pod-eachother-server-"
+svcname_tmp2 = "stress-bootstorm-pod-eachother-client-"
+svc_num = 8
 node_list = []
 apache_server_name_list = []
 apache_client_name_list = []
@@ -23,13 +23,21 @@ if not node_list:
 	sys.exit()
 
 def run_test():
-	#create 300 app
+	#create stress-app
+	app_name = "stress-app"
+	cookies = my_utils._get_cookie(ip)
+	my_utils.create_app(ip,app_name)
+
+	info('sleep 5 seconds after creating stress-app')
+	my_utils.bar_sleep(5)
+
+	#create stress_svc
 	cookies = my_utils._get_cookie(ip)
 	url = "http://" + ip + ":30000/service/stack/api/app"
-	obj_json = {"name":"hello-test2","namespace":"default","stateful":"share","replicas":1,"cpu":100,"memory":256,"diskSize":20000,"containers":[{"name":"hello-test","image":"registry.ekos.local/library/apache-server:latest","command":"","envs":[],"logDir":"","healthCheck":None,"cpuPercent":100,"memPercent":100}],"service":{"ports":[{"protocol":"TCP","containerPort":666,"servicePort":666}]},"volumes":[],"desc":"111"}
-	for i in range(app_num):
-		if i < (app_num / 2):
-			obj_json['name'] = appname_tmp1 + str(i)
+	obj_json = {"name":"stress-svc-ha-1","namespace":"default","stack":"stress-app","stateful":"none","replicas":1,"cpu":125,"memory":64,"diskSize":20000,"containers":[{"name":"hello-test-4","image":"registry.ekos.local/library/stress_centos:latest","command":"","envs":[],"logDir":"","healthCheck":None,"cpuPercent":100,"memPercent":100,"stdin":False,"tty":False,"cfgFileMounts":[],"secretMounts":[]}],"service":{"ports":[{"protocol":"TCP","containerPort":88,"servicePort":888}]},"volumes":[],"desc":""}
+	for i in range(svc_num):
+		if i < (svc_num / 2):
+			obj_json['name'] = svcname_tmp1 + str(i)
 			apache_server_name_list.append(obj_json['name'])		
 			app_rtn = my_utils.call_rest_api(url,"POST",cookies=cookies,json=json.dumps(obj_json))
 			if "success" in json.loads(app_rtn)['status']:
@@ -37,7 +45,7 @@ def run_test():
 			else:
 				return False
 		else:
-			obj_json['name'] = appname_tmp2 + str(i)
+			obj_json['name'] = svcname_tmp2 + str(i)
 			apache_client_name_list.append(obj_json['name'])
 			obj_json['containers'][0]['image'] = "registry.ekos.local/library/apache-client:latest"  
 			app_rtn = my_utils.call_rest_api(url,"POST",cookies=cookies,json=json.dumps(obj_json))
@@ -46,16 +54,16 @@ def run_test():
 			else:
 				return False
 
-	app_list = my_utils.get_all_app(ip)
-	if not app_list:
+	svc_list = my_utils.get_all_app(ip)
+	if not svc_list:
 		error('No app running!')
 		return False
 
-	info('sleep 600s after create app')
-	my_utils.bar_sleep(600)
+	info('sleep 60s after create app')
+	my_utils.bar_sleep(60)
 
 	#check app status
-	rtn = my_utils.check_app_status(ip,app_list)
+	rtn = my_utils.check_service_status(ip,svc_list)
 	if rtn != True:
 		return False
 
@@ -67,11 +75,11 @@ def run_test():
 			info('sleep 30s downloadding the file from another pod')
 			my_utils.bar_sleep(30)			
 	
-	info("sleep 300s afer pod to pod")
-	my_utils.bar_sleep(300)
+	info("sleep 60s afer pod to pod")
+	my_utils.bar_sleep(60)
 	
 	#check app running	
-	rtn = my_utils.check_app_status(ip,app_list)
+	rtn = my_utils.check_service_status(ip,svc_list)
 	if rtn != True:
 		return False
 		

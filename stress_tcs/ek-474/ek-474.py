@@ -6,20 +6,14 @@ stress_node_list = [{'name': 'stress1','vm':["EKOS-Offline-Stress-12","EKOS-Offl
 ip = sys.argv[1]
 testbed = sys.argv[2]
 my_utils = ekosUtils.Utils()
-for my_list in stress_node_list:
- 	if my_list['name'] == testbed:
- 		node_list = my_list['vm']
- 		break
-if not node_list:
- 	error('wrong testbed!')
- 	sys.exit()
+
 
 def run_test():
-	app_stack_name = "stress-app"
+	app_stack_name = "stress_app"
 	volume_prefix = "volume-"
 	app_prefix = "stress-nfs-"
-	volume_number = 5
-	app_num = 5
+	volume_number = 200
+	app_num = 200
 	nfs_name = "darcy-nfs"
 
 	#add nfs 
@@ -44,7 +38,7 @@ def run_test():
 		rtn = my_utils.create_nfs_volume(ip,nfs_name,full_volume_name)
 		if rtn == False:
 			return False
-	my_utils.bar_sleep(60)
+	my_utils.bar_sleep(600)
 	
 	#create app
 	my_utils.create_app(ip,app_stack_name)
@@ -64,7 +58,7 @@ def run_test():
 		else:
 			return False
 	
-	my_utils.bar_sleep(60)
+	my_utils.bar_sleep(600)
 	
 	#check app status
 	service_list = my_utils.get_service_by_app(ip,app_stack_name)
@@ -73,7 +67,7 @@ def run_test():
 		return False
 	
 	#let runnning 30 min
-	my_utils.bar_sleep(60)
+	my_utils.bar_sleep(1800)
 	#check 
 	rtn = my_utils.check_service_status(ip,service_list)
 	if rtn != True:

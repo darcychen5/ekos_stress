@@ -26,7 +26,7 @@ def run_test():
 	cookies = my_utils._get_cookie(ip)
 	my_utils.create_app(ip,app_name)
 
-	info('sleep 1200 seconds')
+	info('sleep 5 seconds')
 	my_utils.bar_sleep(5)
 
 	#create stress_svc 	
@@ -40,12 +40,18 @@ def run_test():
 			info('create application: %s successfully' %obj_json['name'])
 		else:
 			return False
+<<<<<<< HEAD
 
 		info('sleep 1200 seconds')
 		my_utils.bar_sleep(5)
 
 	info('sleep 1200 seconds')
 	my_utils.bar_sleep(120)
+=======
+		
+	info('sleeping 600 seconds after creating all svc')
+	my_utils.bar_sleep(600)
+>>>>>>> fa1d14a078c5e5c9194d8c7d36b26621e8fa11ec
 
 	#get svc name
 	svc_list = []
@@ -72,10 +78,14 @@ def run_test():
 	for poweroff_node in poweroff_nodes:
 		my_utils.poweroff_vm(poweroff_node)
 
+<<<<<<< HEAD
 	info("sleep 1800 seconds")
+=======
+	info("sleep 120 seconds")
+>>>>>>> fa1d14a078c5e5c9194d8c7d36b26621e8fa11ec
 	my_utils.bar_sleep(120)
 	
-	#check pods status
+	#check svc status
 	rtn = my_utils.check_service_status(ip,svc_list)
 	if rtn != True:
 		return False
@@ -90,6 +100,7 @@ def run_test():
 	# 	return True
 	# else:
 	# 	return False
+		
 		
 	return True
 

@@ -389,23 +389,24 @@ class Utils:
 				error('ssh command failed!')
 				error(rtn)
 				return False
+		if "-" in ceph_list['rgw'] or "," in ceph_list['rgw']:
 		#set ceph port
-		cmd = "ekoslet cluster set rgwvip:port 7580"
-		rtn = self.ssh_cmd(deploy_ip,username,password,cmd)
-		if rtn:
-			if not rtn.has_key('stdout'):
-				error('ssh command failed!')
-				error(rtn)
-				return False
-
-		#set ceph vip
-		cmd = "ekoslet cluster set rgwvip:address " + ceph_vip
-		rtn = self.ssh_cmd(deploy_ip,username,password,cmd)
-		if rtn:
-			if not rtn.has_key('stdout'):
-				error('ssh command failed!')
-				error(rtn)
-				return False
+			cmd = "ekoslet cluster set rgwvip:port 7580"
+			rtn = self.ssh_cmd(deploy_ip,username,password,cmd)
+			if rtn:
+				if not rtn.has_key('stdout'):
+					error('ssh command failed!')
+					error(rtn)
+					return False
+	
+			#set ceph vip
+			cmd = "ekoslet cluster set rgwvip:address " + ceph_vip
+			rtn = self.ssh_cmd(deploy_ip,username,password,cmd)
+			if rtn:
+				if not rtn.has_key('stdout'):
+					error('ssh command failed!')
+					error(rtn)
+					return False
 
 		#keygen
 		info("generate keygen")
@@ -553,10 +554,6 @@ class Utils:
 			return True
 
 
-	def get_all_app_name(self,ip):
-		pass
-
-
 	def create_service(self):
 		pass
 	
@@ -590,7 +587,7 @@ class Utils:
 			if rtn != "running":
 				error('service %s is in %s state!' % (service, rtn))
 				return False
-		info('check service status pass!')
+			info('check service %s status pass!' % service)
 		return True
 
 
@@ -604,7 +601,7 @@ class Utils:
 	def check_node_ready(self,ip,username,password):
 		node_list = self.get_nodes(ip,username,password)
 		for node in node_list:
-			cmd = "kubectl get nodes | grep " + node + "|grep Ready"
+			cmd = "kubectl get nodes | grep " + node + "|grep -w Ready"
 			rtn = self.ssh_cmd(ip,username,password,cmd)
 			if rtn['stdout'] == "":
 				error("%s is not ready!" % node)

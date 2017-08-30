@@ -2,7 +2,7 @@ import os,sys,time,ekosUtils,re
 from log import *
 
 #stress testbed
-testbed_list = [{'name': 'stress1','masterip': '192.168.27.11'},{'name':'stress2','masterip': '192.168.27.16'},{'name':'stress3','masterip': '192.168.20.61'}]
+testbed_list = [{'name': 'stress1','masterip': '192.168.27.11'},{'name':'stress2','masterip': '192.168.27.16'},{'name':'stress3','masterip': '192.168.20.61'},{'name':'stress4','masterip': '192.168.10.81'}]
 
 
 
@@ -35,7 +35,7 @@ testbed_name = my_testbed['name']
 test_build = my_utils.get_latest_build()
 if str(refresh_testbed) == "True" or str(refresh_testbed) == "true":
 	info('refresh testbed!')
-	cmd = "python /root/ekos_stress/install/install_ekos.py " + testbed_name
+	cmd = "unbuffer python /root/ekos_stress/install/install_ekos.py " + testbed_name + " >/tmp/install.log"
 	rtn = my_utils.runcmd(cmd)
 	info(rtn)
 	if rtn == False:
