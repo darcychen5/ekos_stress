@@ -554,10 +554,6 @@ class Utils:
 			return True
 
 
-	def get_all_app_name(self,ip):
-		pass
-
-
 	def create_service(self):
 		pass
 	
@@ -591,7 +587,7 @@ class Utils:
 			if rtn != "running":
 				error('service %s is in %s state!' % (service, rtn))
 				return False
-		info('check service status pass!')
+			info('check service %s status pass!' % service)
 		return True
 
 
