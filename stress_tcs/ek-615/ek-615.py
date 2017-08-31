@@ -6,7 +6,7 @@ my_utils = ekosUtils.Utils()
 
 ip = sys.argv[1]
 testbed = sys.argv[2]
-svc_num = 10
+svc_num = 300
 stress_svcname_tmp = "stress-bootstorm-"
 cookies = my_utils._get_cookie(ip)
 

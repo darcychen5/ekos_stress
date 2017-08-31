@@ -9,7 +9,7 @@ stress_node_list = [{'name': 'stress1','vm':["EKOS-Offline-Stress-12","EKOS-Offl
 ip = sys.argv[1]
 testbed = sys.argv[2]
 stress_svcname_tmp = "stress-ha-"
-svc_num = 5
+svc_num = 50
 node_list = []
 for my_list in stress_node_list:
  	if my_list['name'] == testbed:
@@ -25,14 +25,9 @@ def run_test():
 	cookies = my_utils._get_cookie(ip)
 	my_utils.create_app(ip,app_name)
 
-	info('sleep 5 seconds')
-	my_utils.bar_sleep(5)
-
 	#create stress_svc
 	cookies = my_utils._get_cookie(ip)
 	url = "http://" + ip + ":30000/service/stack/api/app"
-	#obj_json = {"name":"hello-test2","namespace":"default","stateful":"none","replicas":1,"cpu":100,"memory":256,"diskSize":20000,"containers":[{"name":"container01","image":"registry.ekos.local/library/stress_centos:latest","command":"","envs":[],"logDir":"","healthCheck":None,"cpuPercent":100,"memPercent":100},{"name":"container02","image":"registry.ekos.local/library/stress_centos:latest","command":"","envs":[],"logDir":"","healthCheck":None,"cpuPercent":100,"memPercent":100},{"name":"container03","image":"registry.ekos.local/library/hello:latest","command":"","envs":[],"logDir":"","healthCheck":None,"cpuPercent":100,"memPercent":100}],"service":{"ports":[{"protocol":"TCP","containerPort":666,"servicePort":666}]},"volumes":[],"desc":"111"}
-	#obj_json = {"name":"stress-svc-ha-1","namespace":"default","stack":"stress-app","stateful":"none","replicas":1,"cpu":125,"memory":64,"diskSize":20000,"containers":[{"name":"hello-test-4","image":"registry.ekos.local/library/stress_centos:latest","command":"","envs":[],"logDir":"","healthCheck":None,"cpuPercent":100,"memPercent":100,"stdin":False,"tty":False,"cfgFileMounts":[],"secretMounts":[]}],"service":{"ports":[{"protocol":"TCP","containerPort":88,"servicePort":888}]},"volumes":[],"desc":""}
 	obj_json = {"name":"stress-svc-ha-1","namespace":"default","stack":"stress-app","stateful":"none","replicas":1,"cpu":125,"memory":64,"diskSize":20000,"containers":[{"name":"container01","image":"registry.ekos.local/library/stress_centos:latest","command":"","envs":[],"logDir":"","healthCheck":None,"cpuPercent":33,"memPercent":33,"stdin":False,"tty":False,"cfgFileMounts":[],"secretMounts":[]},{"name":"container02","image":"registry.ekos.local/library/stress_centos:latest","command":"","envs":[],"logDir":"","healthCheck":None,"cpuPercent":33,"memPercent":33,"stdin":False,"tty":False,"cfgFileMounts":[],"secretMounts":[]},{"name":"container03","image":"registry.ekos.local/library/hello:latest","command":"","envs":[],"logDir":"","healthCheck":None,"cpuPercent":33,"memPercent":33,"stdin":False,"tty":False,"cfgFileMounts":[],"secretMounts":[]}],"service":{"ports":[{"protocol":"TCP","containerPort":666,"servicePort":888}]},"volumes":[],"desc":""}
 	for i in range(svc_num):
 		obj_json['name'] = stress_svcname_tmp + str(i)
@@ -41,19 +36,19 @@ def run_test():
 			info('create application: %s successfully' %obj_json['name'])
 		else:
 			return False
-	info('sleep 60 seconds')
-	my_utils.bar_sleep(60)
+	info('sleep 300 seconds')
+	my_utils.bar_sleep(300)
 	
 	#get app name
 	svc_list = []
 	for i in range(svc_num):
 		svcname = stress_svcname_tmp + str(i)
 		svc_list.append(svcname)
+
 	#check app running
 	rtn = my_utils.check_service_status(ip,svc_list)
 	if rtn != True:
 		return False
-	
 	
 	#check node ready
 	rtn = my_utils.check_node_ready(ip,"root","password")
@@ -90,6 +85,10 @@ def run_test():
 	if rtn != True:
 		return False
 
+	#check app running
+	rtn = my_utils.check_service_status(ip,svc_list)
+	if rtn != True:
+		return False
 
 	#rtn = my_utils.k8s_pod_health_check(ip)
 	#if rtn == True:

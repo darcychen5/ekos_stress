@@ -390,7 +390,7 @@ class Utils:
 				error(rtn)
 				return False
 		if "-" in ceph_list['rgw'] or "," in ceph_list['rgw']:
-		#set ceph port
+			#set ceph port
 			cmd = "ekoslet cluster set rgwvip:port 7580"
 			rtn = self.ssh_cmd(deploy_ip,username,password,cmd)
 			if rtn:
@@ -601,7 +601,7 @@ class Utils:
 	def check_node_ready(self,ip,username,password):
 		node_list = self.get_nodes(ip,username,password)
 		for node in node_list:
-			cmd = "kubectl get nodes | grep " + node + "|grep -w Ready"
+			cmd = "kubectl get nodes | grep " + node + "|grep Ready"
 			rtn = self.ssh_cmd(ip,username,password,cmd)
 			if rtn['stdout'] == "":
 				error("%s is not ready!" % node)
@@ -621,9 +621,9 @@ class Utils:
 			return None
 		return node_list
 
-	def get_app_service_port(self,ip,service_name):
+	def get_app_service_port(self,ip,app_name):
 		url = "http://" + ip + ":30000/service/stack/api/app/detail"
-		params = "namespace=default&name=" + service_name
+		params = "namespace=default&name=" + app_name
 		rtn = self.call_rest_api(url,"GET",params=params)
 		if rtn == None:
 			return None
@@ -683,30 +683,72 @@ class Utils:
 		return True
 
 
-#----------------------------------------lb related-----------------------------------------------------------
-	def create_tcp_lb(self,ip,lb_name,listen_port,app_name,app_service_port):
-		obj_json = {"name":"lb-default","namespace":"default","desc":"","tcpRules":[{"port":None,"serviceName":None,"servicePort":None}],"httpRules":[]}
+#----------------------------------------lbrelated-----------------------------------------------------------
+	def create_lb(self,ip,lb_name,namespace="default"):
+		obj_json = {"name":"lb-default","namespace":"default","desc":"","scheduler":{}}
 		obj_json['name'] = lb_name
-		obj_json['tcpRules'][0]['port'] = int(listen_port)
-		obj_json['tcpRules'][0]['serviceName'] = app_name
-		obj_json['tcpRules'][0]['servicePort'] = int(app_service_port)
+		#obj_json['tcpRules'][0]['port'] = int(listen_port)
+		#obj_json['tcpRules'][0]['serviceName'] = app_name
+		#obj_json['tcpRules'][0]['servicePort'] = int(app_service_port)
+		obj_json['namespace'] = namespace
 		url = "http://" + ip + ":30000/service/stack/api/balance"
 		rtn = self.call_rest_api(url,"POST",json=json.dumps(obj_json))
 		if json.loads(rtn)['status'] == "success":
-			info('create tcp loadbalance %s successfully!' % lb_name)
+			info('create loadbalance %s successfully!' % lb_name)
 			return True
 		else:
-			error('create tcp loadbalance %s failed!' % lb_name)
+			error('create loadbalance %s failed!' % lb_name)
 			return False
 
-	def create_tcp_lb_for_each_app(self,ip,appname,listen_port_start):
-		app_list = self.get_service_by_app(ip,appname)
-		for app in app_list:
-			lb_name = "lb-auto-" + app
-			service_port = self.get_app_service_port(ip,app)
-			self.create_tcp_lb(ip,lb_name,listen_port_start,app,service_port)
-			listen_port_start = listen_port_start + 1
+	def add_http_rule(self,ip,lb_name,service_name,listen_port):
+		url = "http://" + ip + ":30000/service/stack/api/balance/add/httprule"
+		obj_json = {"name":"lb-darcy","namespace":"default","httpRules":[{"secret":"","port":6666,"host":"","path":"/","stickiness":"","keepalive":False,"serviceName":"eureka","servicePort":8761}]}
+		obj_json['name'] = lb_name
+		obj_json['httpRules'][0]['port'] = listen_port
+		obj_json['httpRules'][0]['serviceName'] = service_name
+		obj_json['httpRules'][0]['servicePort'] = self.get_app_service_port(ip,service_name)
+		rtn = self.call_rest_api(url,"POST",json=json.dumps(obj_json))
+		if json.loads(rtn)['status'] == "success":
+			info('add http rule for %s successfully~' % service_name)
+			return True
+		else:
+			info('add http rule for %s failed!' % service_name)
+			return False
+
+	def add_tcp_rule(self,ip,lb_name,service_name,listen_port):
+		url = "http://" + ip + ":30000/service/stack/api/balance/add/rule"
+		obj_json = {"name":"lb-darcy","namespace":"default","rules":[{"protocol":"TCP","port":3333,"serviceName":"mysql-demo","servicePort":3306}]}
+		obj_json['rules'][0]['port'] = listen_port
+		obj_json['rules'][0]['name'] = lb_name
+		obj_json['rules'][0]['servicePort'] = self.get_app_service_port(ip,service_name)
+		rtn = self.call_rest_api(url,"POST",json=json.dumps(obj_json))
+		if json.loads(rtn)['status'] == "success":
+			info('add tcp rule for %s successfully~' % service_name)
+			return True
+		else:
+			info('add tcp rule for %s failed!' % service_name)
+			return False
+
+	def add_http_rule_per_app(self,ip,lb_name,appname,listen_port_start=15000):
+		service_list = self.get_service_by_app(ip,appname)
+		listen_port = listen_port_start
+		for service_name in service_list:
+			rtn = self.add_http_rule(ip,lb_name,service_name,listen_port)
+			if not rtn:
+				error('add rule for %s failed!' % service_name)
+				return False
+			listen_port = listen_port + 1
+		info('add rules for app %s done!' % service_name)
 		return True
+
+	def add_http_rule_for_all_service(self,ip,lb_name):
+		app_list = self.get_all_app(ip)
+		for app_name in app_list:
+			rtn = self.add_http_rule_per_app(ip,lb_name,app_name)
+			if not rtn:
+				return False
+		return True
+
 
 	def delete_lb(self,ip,lb_name,namespace="default"):
 		url = "http://" + ip + ":30000/service/stack/api/balance/del"
@@ -750,10 +792,12 @@ class Utils:
 		for lb in json.loads(rtn)['balances']:
 			lb_name = lb['name']
 			lb_status = lb['status']
-			if lb_status != "Running":
+			if lb_status != "running":
 				error('load balance %s is in %s state' % (lb_name,lb_status))
 				return False
-		return True
+			else:
+				info('check load balance %s pass' % lb_name)
+				return True
 
 	def clean_testbed(self,ip):
 		info('cleaning testbed...')
