@@ -276,6 +276,28 @@ class Utils:
 		self.disconnect_vcenter(server)
 		return True
 
+	def create_snapshot(self, vm_name, snapshot_name, sync_run=True, description=None,memory=False, quiesce=False):
+		server = pysphere.VIServer()
+		self.connect_vcenter(server)
+		try:
+			vm = server.get_vm_by_name(vm_name)
+		except Exception,e:
+			error("Can not find the vm,vm name: %s" % vm_name)
+			error(e)
+			self.disconnect_vcenter(server)
+			return False
+		try:
+			vm.create_snapshot(snapshot_name, sync_run, description, memory, quiesce)
+		except Exception,e:
+			self.disconnect_vcenter(server)
+			error('%s revert to snapshot failed!' % vm_name)
+			return False
+		info('%s revert to snapshot successfully!' % vm_name)
+		self.disconnect_vcenter(server)
+		return True		
+
+
+
 	#must give the vip is master HA is enabled
 	def deploy_ekos(self,build_name,inventory,node_name_list,ceph_list,ceph_vip,vip=None,username="root",password="password"):
 		build_url = "http://192.168.1.234:8080/ekos/stressImages/" + build_name
@@ -832,19 +854,19 @@ class Utils:
 		info("create storage successfully")
 		return True
 
-	def get_nfs_status(self,ip,storage_name):
+	def get_nfs_status(self,ip,storage_name,namespace="default"):
 		url = "http://" + ip + ":30000/service/storage/api/storage/" + storage_name
-		parmas = "&pluginname=storage"
+		parmas = "&pluginname=storage&namespace=" + namespace
 		rtn = self.call_rest_api(url,"GET",params=parmas)
 		if rtn == None:
 			error("get nfs status failed")
 			return False
 		return json.loads(rtn)['status']
 
-	def get_nfs_list(self,ip):
+	def get_nfs_list(self,ip,namespace="default"):
 		nfs_list = []
 		url = "http://" + ip + ":30000/service/storage/api/storage"
-		params = "page=1&itemsPerPage=1000&pluginname=storage"
+		params = "page=1&itemsPerPage=1000&pluginname=storage&namespace=" + namespace
 		rtn = self.call_rest_api(url,"GET",params=params)
 		if rtn == None:
 			error('get nfs list failed!')
@@ -865,15 +887,15 @@ class Utils:
 			info("nfs storage %s check pass!" % storage)
 		return True
 
-	def remove_nfs(self,ip,nfs_name):
+	def remove_nfs(self,ip,nfs_name,namespace="default"):
 		url = "http://" + ip + ":30000/service/storage/api/storage/" + nfs_name
-		params = "pluginname=storage"
+		params = "pluginname=storage&namespace=" + namespace
 		info('removing nfs: %s' % nfs_name)
 		self.call_rest_api(url,"DELETE",params=params)
 		return True
 
 
-	def create_nfs_volume(self,ip,nfs_name,volume_name,access_modes="ReadWriteMany",quantity="5Gi"):
+	def create_nfs_volume(self,ip,nfs_name,volume_name,access_modes="ReadWriteMany",quantity="5Gi",namespace="default"):
 		url = "http://" + ip + ":30000/service/storage/api/storage/pvc"
 		params = "pluginname=storage"
 		obj_json = {}
@@ -881,6 +903,7 @@ class Utils:
 		obj_json['pvc_name'] = volume_name
 		obj_json['access_modes'] = access_modes
 		obj_json['quantity'] = quantity
+		obj_json['namespace'] = namespace
 		rtn = self.call_rest_api(url,"POST",params=params,json=json.dumps(obj_json))
 		if rtn == None:
 			error('create nfs volume %s failed' % volume_name)
@@ -888,10 +911,10 @@ class Utils:
 		info('create nfs volume %s successfully' % volume_name)
 		return True
 
-	def get_nfs_volume_name(self,ip,nfs_name):
+	def get_nfs_volume_name(self,ip,nfs_name,namespace="default"):
 		volume_name = []
 		url = "http://" + ip + ":30000/service/storage/api/storage/" + nfs_name
-		params = "&pluginname=storage"
+		params = "&pluginname=storage&namespace=" + namespace
 		rtn = self.call_rest_api(url,"GET",params=params)
 		if json.loads(rtn)['pvclist']['items'] == None:
 			info('No volume in nfs: %s' % nfs_name)
@@ -903,9 +926,9 @@ class Utils:
 			return None
 		return volume_name
 
-	def remove_nfs_volume(self,ip,volume_name):
+	def remove_nfs_volume(self,ip,volume_name,namespace="default"):
 		url = "http://" + ip + ":30000/service/storage/api/storage/pvc/" + volume_name
-		params = "pluginname=storage"
+		params = "pluginname=storage&namespace=" + namespace
 		info('removing nfs volume: %s' % volume_name)
 		rtn = self.call_rest_api(url,"DELETE",params=params)
 		return True
