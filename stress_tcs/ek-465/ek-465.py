@@ -45,8 +45,6 @@ def run_test():
 		else:
 			return False
 
-	info('create all svc success,sleep 20 minutes')
-	my_utils.bar_sleep(1200)
 	
         #get svc name
         svc_list = []
@@ -55,26 +53,42 @@ def run_test():
                 svc_list.append(svcname)
 
         #check svc status
-        print"beginning check svc status frist time"
-        rtn = my_utils.check_service_status(ip,svc_list)
-        if rtn != True:
-                sys.exit()
+        print "check_service_status"
+        times = 1
+        while times <= 11:
+                rtn = my_utils.check_service_status(ip,svc_list)
+                if rtn != True:
+                        info("this is %s times check,have pods not Running please wait 30 seconds will try again"%times)
+                        my_utils.bar_sleep(30)
+                        times=times+1
+                elif times == 11:
+                        return False
+                else:
+                        break
 
 	#create lb 
 	rtn = my_utils.create_lb(ip,lb_name) 
 	if rtn != True:
 		sys.exit()
-
-	info('create lb success,sleep 30 seconds')
-	my_utils.bar_sleep(30)
-
+	#check lb status
+	info('check lb status')
+	times = 1
+	while times <= 11:
+		rtn = my_utils.check_lb_status(ip)
+		if rtn != True:
+			info('this is %s times check,lb status abnormal please wait 30 seconds will try again!'%times)
+			my_utils.bar_sleep(30)
+			times = times+1
+		elif times == 11:
+			info('check done...lb abnormal pleaase manule check it!!!')
+			return False
+		else:
+			break
 	#create_http rule for all service
 	rtn = my_utils.add_http_rule_for_all_service(ip,lb_name)
 	if rtn != True:
 		return False  
 
-	info("create http rule for all svc success,sleep 5 minutes")
-        my_utils.bar_sleep(300)
 	################################################check_app_status and check_lb_status########################################
 	#get svc name
 	svc_list = []
@@ -83,29 +97,67 @@ def run_test():
 		svc_list.append(svcname)
 
 	#check svc status
-	print"beginning check svc status second times"	
-	rtn = my_utils.check_service_status(ip,svc_list)
-	if rtn != True:
-		sys.exit()	
+	print"beginning check svc status after create http lb rule"	
+        times = 1
+        while times <= 11:
+                rtn = my_utils.check_service_status(ip,svc_list)
+                if rtn != True:
+                        info("this is %s times check,have pods not Running please wait 30 seconds will try again"%times)
+                        my_utils.bar_sleep(30)
+                        times=times+1
+                elif times == 11:
+                        return False
+                else:
+                        break
 
 	#check lb status
-	print "beginning check lb"
-	rtn = my_utils.check_lb_status(ip)
-	if rtn != True:
-		return False
-	return True
+	print "beginning check lb after create lb http rule"
+        times = 1
+        while times <= 11:
+                rtn = my_utils.check_lb_status(ip)
+                if rtn != True:
+                        info('this is %s times check,lb status abnormal please wait 30 seconds will try again!'%times)
+                        my_utils_bar_sleep(30)
+                        times = times+1
+                elif times == 11:
+                        info('check done...lb abnormal pleaase manule check it!!!')
+                        return False
+                else:
+			return True
+                        break
+
 #main
 rtn = run_test()
 if rtn == True:
-	my_utils.clean_testbed(ip)
-	info("wait for clean testbed,sleep 10 minutes")
-	my_utils.bar_sleep(600)
-	cmd = "kubectl get po | grep " + stress_svcname_tmp + "| grep Running"
-	rtn = my_utils.ssh_cmd(ip,"root","password",cmd)
-	if rtn["stdout"] == "":
-		print "clean testbed successful!"
-		info('ok')
-	else:
-		error("have any pod not delete success,run test case ek-465 failed")
+        my_utils.clean_testbed(ip)
+        cmd = "kubectl get po | grep " + stress_svcname_tmp + "| grep Running"
+        times=1
+        info("checking clean testbed status ! this is %s checking"%times)
+        while times <= 11:
+                rtn = my_utils.ssh_cmd(ip,"root","password",cmd)
+                if rtn["stdout"] != "":
+                        print "cleaning testbed not done... please wait 30 senconds will try again "
+                        my_utils.bar_sleep(30)
+                        times=times+1
+                elif times == 11:
+                        error("have any pod not delete success,run test case ek-465 failed")
+                else:
+                        break
+        cmd = "kubectl get po | grep " + lb_name + "| grep Running"
+        times=1
+        info("checking clean testbed status ! this is %s checking"%times)
+        while times <= 11:
+                rtn = my_utils.ssh_cmd(ip,"root","password",cmd)
+                if rtn["stdout"] != "":
+                        print "cleaning testbed not done... please wait 30 senconds will try again "
+                        my_utils.bar_sleep(30)
+                        times=times+1
+                elif times == 11:
+                        error("have any pod not delete success,run test case ek-465 failed")
+                else:
+                        info("ok")
+                        break
+
 else:
-	error('run test case ek-465 failed!')
+        error('run test case ek-465 failed!')
+
