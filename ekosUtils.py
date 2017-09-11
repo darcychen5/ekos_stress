@@ -504,7 +504,7 @@ class Utils:
 		#appstore
 		url = "http://" + ip + ":30000/api/plugin"
 		json_appstore = {"name":"appstore"}
-		json_ci = {"name":"ci"}
+		#json_ci = {"name":"ci"}
 		json_network = {"name":"network"}
 		json_node = {"name":"node"}
 		json_registry = {"name":"registry"}
@@ -512,7 +512,7 @@ class Utils:
 		json_storage = {"name":"storage"}
 		json_tenant = {"name":"tenant"}
 
-		plugin_lists = ["json_node","json_stack","json_appstore","json_storage","json_ci","json_network","json_registry","json_tenant"]
+		plugin_lists = ["json_node","json_stack","json_appstore","json_storage","json_network","json_registry","json_tenant"]
 		for plugin in plugin_lists:
 			rtn = self.call_rest_api(url,"POST",json=json.dumps(eval(plugin)))
 			if json.loads(rtn)['status'] == "ok":
