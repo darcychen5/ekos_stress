@@ -28,7 +28,7 @@ def run_test():
 	cookies = my_utils._get_cookie(ip)
 	my_utils.create_app(ip,app_name)
 
-	info('sleep 1200 seconds')
+	info('sleep 5 seconds')
 	my_utils.bar_sleep(5)
 
 	#create stress_svc 	
@@ -43,37 +43,56 @@ def run_test():
 		else:
 			return False
 
-	info('sleep 600 seconds after creating all(300) stress_svc')
-	my_utils.bar_sleep(600)
+#	info('sleep 600 seconds after creating all(300) stress_svc')
+#	my_utils.bar_sleep(900)
 	
-	
+	#check node 
+
+	rtn = my_utils.check_node_ready(ip,"root","password")
+	if rtn != True:
+		return False
+
 	#get app name
 	svc_list = []
 	for i in range(svc_num):
 		svcname = stress_svcname_tmp + str(i)
 		svc_list.append(svcname)
-	print "check_service_status first time"
 
-	#check app status
-	rtn = my_utils.check_service_status(ip,svc_list)
-	if rtn != True:
-		return False	
-	
+	print "check_service_status"
+        times = 1
+        while times <= 11:
+                rtn = my_utils.check_service_status(ip,svc_list)
+                if rtn != True:
+                        info("this is %s times check,have pods not Running please wait 30 seconds will try again"%times)
+                        my_utils.bar_sleep(30)
+                        times=times+1
+                elif times == 11:
+                        return False
+                else:
+                        break
 	"""
 	rtn = my_utils.k8s_pod_health_check(ip)
 	if rtn != True:
 		return False
 	"""
-	#let runnning 30 min
+	info("let runnning 30 min")
 	my_utils.bar_sleep(1800)
 	
 	print "check_service_status after runnning 30 min"	
 	#check app status
-	rtn = my_utils.check_service_status(ip,svc_list)
-	if rtn != True:
-		return False
-	return True
-	
+        times = 1
+        while times <= 11:
+                rtn = my_utils.check_service_status(ip,svc_list)
+                if rtn != True:
+                        info("this is %s times check,have pods not Running please wait 30 seconds will try again"%times)
+                        my_utils.bar_sleep(30)
+                        times=times+1
+                elif times == 11:
+			info("running 20 minutes pods status not health")
+                        return False
+                else:
+			return True
+			break
 	"""
 	rtn = my_utils.k8s_pod_health_check(ip)
 	if rtn != True:
@@ -83,9 +102,22 @@ def run_test():
 #main
 rtn = run_test()
 if rtn == True:
-	my_utils.clean_testbed(ip)
-	info('ok')
+	my_utils.delete_all_app(ip)
+        cmd = "kubectl get po | grep " + stress_svcname_tmp + "| grep Running"
+	times=1
+        info("checking clean testbed status ! this is %s checking"%times)
+	while times <= 11:
+        	rtn = my_utils.ssh_cmd(ip,"root","password",cmd)
+        	if rtn["stdout"] != "":
+                	print "cleaning testbed not done... please wait 30 senconds will try again "
+                	my_utils.bar_sleep(30)
+			times=times+1
+		elif times == 11:
+			error("have any pod not delete success,run test case ek-464 failed")
+		else:
+			info("ok")
+			break
 else:
 	error('run test case ek-464 failed!')
 
-	
+
