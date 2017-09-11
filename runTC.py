@@ -40,10 +40,11 @@ if str(refresh_testbed) == "True" or str(refresh_testbed) == "true":
 	info(rtn)
 	if rtn == False:
 		sys.exit()
+	my_utils.bar_sleep(300)
+
 	#active plugin
-	my_utils.bar_sleep(60)
 	rtn = my_utils.active_plugin(master_ip)
-	my_utils.bar_sleep(600)
+	my_utils.bar_sleep(60)
 	if rtn != True:
 		error('active plugin failed')
 		sys.exit()
