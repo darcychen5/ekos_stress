@@ -5,7 +5,5 @@ import ekosUtils
 my_utils = ekosUtils.Utils()
 ip = sys.argv[1]
 
-lb = "demo-springlcoud"
-my_utils.create_lb(ip,lb)
-rtn = my_utils.add_http_rule_for_all_service(ip,lb)
+rtn = my_utils.clean_testbed(ip)
 print rtn

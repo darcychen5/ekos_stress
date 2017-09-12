@@ -1,12 +1,10 @@
-import os,sys,time,ekosUtils,re
+import os,sys,time,ekosUtils,re,ConfigParser
 from log import *
 
-#stress testbed
-testbed_list = [{'name': 'stress1','masterip': '192.168.27.11'},{'name':'stress2','masterip': '192.168.27.16'},{'name':'stress3','masterip': '192.168.20.61'},{'name':'stress4','masterip': '192.168.10.81'}]
-
-
+configfile = "/root/ekos_stress/install/config.ini"
 
 my_utils = ekosUtils.Utils()
+
 refresh_testbed = False
 my_testbed = {}
 if len(sys.argv) == 4:
@@ -21,16 +19,25 @@ elif len(sys.argv) == 5:
 else:
 	error('wrong args!')
 	sys.exit()
-for tb in testbed_list:
-	if tb['name'] == testbed:
-		my_testbed = tb
-if not my_testbed.has_key('masterip'):
-	error('no such testbed: %s' % testbed)
+
+conf = ConfigParser.ConfigParser()
+conf.read(configfile)
+testbed_list = conf.sections()
+print testbed_list
+if testbed not in testbed_list:
+	error('no such testbed %s' % testbed)
 	sys.exit()
 
 
-master_ip = my_testbed['masterip']
-testbed_name = my_testbed['name']
+testbed_name = testbed
+
+#get master ip or vip
+inventory_list = eval(my_utils._get_config(testbed_name,"inventory_list",configfile))
+if "-" in inventory_list['master'] or "," in inventory_list['master']:
+	master_ip = my_utils._get_config(testbed_name,"vip",configfile)
+else:
+	master_ip = inventory_list['master']
+
 #refresh testbed
 test_build = my_utils.get_latest_build()
 if str(refresh_testbed) == "True" or str(refresh_testbed) == "true":

@@ -12,8 +12,8 @@ def run_test():
 	app_stack_name = "stress-app"
 	volume_prefix = "volume-"
 	app_prefix = "stress-nfs-"
-	volume_number = 200
-	app_num = 200
+	volume_number = 300
+	app_num = 300
 	nfs_name = "darcy-nfs"
 
 	#add nfs 

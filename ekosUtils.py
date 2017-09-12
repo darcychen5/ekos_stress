@@ -1,4 +1,4 @@
-import sys,urllib2,json,subprocess,time,cookielib,re,pysphere,paramiko,progressbar
+import sys,urllib2,json,subprocess,time,cookielib,re,pysphere,paramiko,progressbar,ConfigParser
 #from pysphere.resources import VimService_services as VI
 #from pysphere.vi_virtual_machine import VIVirtualMachine
 from log import *
@@ -55,6 +55,12 @@ class Utils:
 			all_cookie += tmp
 		return all_cookie
 
+	def _get_config(self, section, key, configfile):
+		config = ConfigParser.ConfigParser()
+		path = (os.path.realpath(configfile))
+		config.read(path)
+		rtn = config.get(section, key)
+		return rtn
 	
 	def runcmd(self,cmd,print_ret = True,lines = False):
 		if print_ret:
