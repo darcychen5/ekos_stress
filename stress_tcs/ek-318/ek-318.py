@@ -3,23 +3,12 @@ sys.path.insert(0, '/root/ekos_stress/')
 import ekosUtils
 from log import *
 
-stress_node_list = [{'name': 'stress1','vm':["EKOS-Offline-Stress-12","EKOS-Offline-Stress-13","EKOS-Offline-Stress-14"]},{'name': 'stress2','vm':["EKOS-Offline-Stress-17","EKOS-Offline-Stress-18","EKOS-Offline-Stress-19"]},{'name': 'stress3','vm':["EKOS-offline-darcy-62","EKOS-offline-darcy-63","EKOS-offline-darcy-64"]},{'name': 'stress4','vm':["EKOS-offline-Stress-10-84","EKOS-offline-Stress-10-85","EKOS-offline-Stress-10-86","EKOS-offline-Stress-10-87","EKOS-offline-Stress-10-88","EKOS-offline-Stress-10-89"]}]
-
-
 ip = sys.argv[1]
 testbed = sys.argv[2]
 stress_svcname_tmp = "stress-powercycle-"
-svc_num = 100
+svc_num = 200
 my_utils = ekosUtils.Utils()
-node_list = []
-for my_list in stress_node_list:
-	if my_list['name'] == testbed:
-		node_list = my_list['vm']
-		break
-if not node_list:
-	error('wrong testbed!')
-	sys.exit()
-
+node_list = eval(my_utils._get_config(testbed,"node_name_list","/root/ekos_stress/install/config.ini"))
 
 def run_test():
 	#create stress_app
@@ -75,7 +64,7 @@ def run_test():
 			return False
 	
 	info('Power on node done,sleep 6 minutes')
-	my_utils.bar_sleep(300)
+	my_utils.bar_sleep(800)
 	
 	#check node ready
 	rtn = my_utils.check_node_ready(ip,"root","password")
