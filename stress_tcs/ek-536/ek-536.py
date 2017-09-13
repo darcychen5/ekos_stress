@@ -6,8 +6,8 @@ from log import *
 
 ip = sys.argv[1]
 testbed = sys.argv[2]
-stress_svcname_tmp = "stress-powercycle-"
-stress_appname_tmp = "stress-powercycle-app-"
+stress_svcname_tmp = "powercycle-"
+stress_appname_tmp = "powercycle-app-"
 svc_num = 4
 app_num = 50
 my_utils = ekosUtils.Utils()
@@ -34,7 +34,7 @@ def run_test():
                             return False
 
         info('sleep 120 seconds')
-        my_utils.bar_sleep(120)
+        my_utils.bar_sleep(300)
 
         #get app name
         app_list = my_utils.get_all_app(ip)
@@ -76,11 +76,12 @@ def run_test():
 
         rtn = my_utils._get_cookie(ip)
         #check app status
-        rtn = my_utils.check_service_status(ip,app_list)
-        if rtn != True:
+        for app in app_list:
+            service_name = my_utils.get_service_by_app(ip,app)
+            rtn = my_utils.check_service_status(ip,service_name)
+            if rtn != True:
                 return False
-	else:
-        	return True
+        return True
 
 
 """
