@@ -66,12 +66,13 @@ def run_test():
 			return False
 
 	#one pod access to another pod  
-	for server_name in apache_server_name_list:
+	
+	for server_name in random.sample(apache_server_name_list,1):
 		for client_name in apache_client_name_list:
 			cmd = "kubectl exec -it " + client_name + "-" + str(0) + " -- curl -O " + server_name + "-" + str(0) + "." + server_name + ":80/filebench_stress.tgz"
 			rtn = my_utils.ssh_cmd(ip, "root", "password", cmd)	
 			info('sleep 5s downloadding the file from another pod')
-			my_utils.bar_sleep(1)		
+			#my_utils.bar_sleep(1)		
 	
 	info("sleep 300s afer pod to pod")
 	my_utils.bar_sleep(300)
