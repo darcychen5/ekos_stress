@@ -827,6 +827,13 @@ class Utils:
 				info('check load balance %s pass' % lb_name)
 				return True
 
+	def get_lb_hostip(self,ip,lb_name,namespace='default'):
+		url = "http://" + ip + ":30000/service/stack/api/balance/detail"
+		params = "namespace=" + namespace + "&name=" + lb_name
+		rtn = self.call_rest_api(url,"GET",params=params)
+		return json.loads(rtn)['hostips']
+
+
 	def clean_testbed(self,ip):
 		info('cleaning testbed...')
 		self.delete_all_lb(ip)

@@ -5,5 +5,5 @@ import ekosUtils
 my_utils = ekosUtils.Utils()
 ip = sys.argv[1]
 
-rtn = my_utils.clean_testbed(ip)
+rtn = my_utils.get_lb_hostip(ip,'devops')
 print rtn
