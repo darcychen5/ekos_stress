@@ -90,6 +90,7 @@ for tc in os.listdir(workdir):
 		info(line)
 		if re.search('ok',line):
 			info('testcase: %s execute %d successfully' % (tc_name,i))
+			my_utils.bar_sleep(300)
 		else:
 			info('testcase %s execute %d failed!' % (tc_name,i))
 			flag = 1
