@@ -82,8 +82,8 @@ for tc in os.listdir(workdir):
 		my_utils.runcmd(cmd)
 		f = open(logname,'r')
 		try:
-			f.seek(-3,2)
-			line = f.readline()
+			f.seek(-7,2)
+			line = f.read(2)
 		except:
 			error('file %s is empty' % logname)
 			sys.exit()

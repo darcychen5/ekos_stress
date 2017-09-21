@@ -889,7 +889,7 @@ class Utils:
 		for nfs_name in json.loads(rtn)['items']:
 			nfs_list.append(nfs_name['name']) 		
 		if not nfs_list:
-			error("there is no nfs!")
+			info("there is no nfs!")
 			return None
 		return nfs_list
 
