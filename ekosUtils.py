@@ -574,11 +574,11 @@ class Utils:
 			info("No app detected!")
 			return None
 		return app_list
-	def delete_all_app(self,ip):
-		app_list = self.get_all_app(ip)
+	def delete_all_app(self,ip,namespace='default'):
+		app_list = self.get_all_app(ip,namespace=namespace)
 		if app_list:
 			for app in app_list:
-				self.delete_app(ip,app)
+				self.delete_app(ip,app,namespace=namespace)
 			return True
 
 
@@ -611,7 +611,7 @@ class Utils:
 
 	def check_service_status(self,ip,service_name_list,namespace="default"):
 		for service in service_name_list:
-			rtn = self.get_service_status(ip,service)
+			rtn = self.get_service_status(ip,service,namespace)
 			if rtn != "running":
 				error('service %s is in %s state!' % (service, rtn))
 				return False
@@ -637,10 +637,10 @@ class Utils:
 			info("Check %s pass" % node)
 		return True
 
-	def get_service_by_app(self,ip,appname):
+	def get_service_by_app(self,ip,appname,namespace='default'):
 		node_list = []
 		url = "http://" + ip + ":30000/service/stack/api/stack/detail"
-		params = "namespace=default&name=" + appname
+		params = "namespace=" + namespace + "&name=" + appname
 		rtn = self.call_rest_api(url,"GET",params=params)
 		for service in json.loads(rtn)['apps']:
 			node_list.append(service['name'])
@@ -791,10 +791,10 @@ class Utils:
 		error('loadbanlance %s delete failed!' % lb_name)
 		return False
 
-	def get_all_lb_list(self,ip):
+	def get_all_lb_list(self,ip,namespace='default'):
 		lb_list = []
 		url = "http://" + ip + ":30000/service/stack/api/balance"
-		params = "namespace=default&page=1&itemsPerPage=1000"
+		params = "namespace=" + namespace + "&page=1&itemsPerPage=1000"
 		rtn = self.call_rest_api(url,"GET",params=params)
 		for lb in json.loads(rtn)['balances']:
 			lb_name = lb['name']
@@ -804,11 +804,11 @@ class Utils:
 			return None
 		return lb_list
 
-	def delete_all_lb(self,ip):
-		lb_list = self.get_all_lb_list(ip)
+	def delete_all_lb(self,ip,namespace='default'):
+		lb_list = self.get_all_lb_list(ip,namespace=namespace)
 		if lb_list:
 			for lb_name in lb_list:
-				self.delete_lb(ip,lb_name)
+				self.delete_lb(ip,lb_name,namespace=namespace)
 			return True
 		return False
 
@@ -836,16 +836,18 @@ class Utils:
 
 	def clean_testbed(self,ip):
 		info('cleaning testbed...')
-		self.delete_all_lb(ip)
-		time.sleep(5)
-
-		self.delete_all_app(ip)
+		tenant_list = self.get_all_tenant_name(ip)
+		for tenant in tenant_list:
+			self.delete_all_app(ip,namespace=tenant)
+			self.delete_all_lb(ip,namespace=tenant)
 		self.bar_sleep(60)
-
-		self.remove_all_volume(ip)
+		for tenant in tenant_list:
+			self.remove_all_volume(ip,namespace=tenant)
 		time.sleep(5)
+		for tenant in tenant_list:
+			self.remove_all_nfs(ip,namespace=tenant)
 
-		self.remove_all_nfs(ip)
+		self.delete_all_tenant(ip)
 		return True
 
 #-----------------------------storage related-----------------------------
@@ -947,25 +949,25 @@ class Utils:
 		return True
 
 
-	def remove_all_volume_per_nfs(self,ip,nfs_name):
-		volume_list = self.get_nfs_volume_name(ip,nfs_name)
+	def remove_all_volume_per_nfs(self,ip,nfs_name,namespace='default'):
+		volume_list = self.get_nfs_volume_name(ip,nfs_name,namespace=namespace)
 		if volume_list:
 			for volume in volume_list:
-				self.remove_nfs_volume(ip,volume)
+				self.remove_nfs_volume(ip,volume,namespace=namespace)
 			return True
 		else:
 			return False
-	def remove_all_volume(self,ip):
-		nfs_list = self.get_nfs_list(ip)
+	def remove_all_volume(self,ip,namespace='default'):
+		nfs_list = self.get_nfs_list(ip,namespace=namespace)
 		if nfs_list:
 			for nfs in nfs_list:
-				self.remove_all_volume_per_nfs(ip,nfs)
+				self.remove_all_volume_per_nfs(ip,nfs,namespace=namespace)
 
-	def remove_all_nfs(self,ip):
-		nfs_list = self.get_nfs_list(ip)
+	def remove_all_nfs(self,ip,namespace='default'):
+		nfs_list = self.get_nfs_list(ip,namespace=namespace)
 		if nfs_list:
 			for nfs in nfs_list:
-				self.remove_nfs(ip,nfs)
+				self.remove_nfs(ip,nfs,namespace=namespace)
 		return True
 #------------------------------host related-----------------------------------
 	def add_host_by_password(self,ip,node_ip_list):
@@ -984,6 +986,64 @@ class Utils:
 
 	def get_host_status(ip,host_name):
 		pass
+
+#---------------------------------tenant related--------------------------------------------
+	def add_tenant(self,ip,tenant_name,owner_id=10000):
+		url = "http://" + ip + ":30000/service/tenant/api/tenant"
+		obj_json = {"project_name":"tenant-defalt","owner_id":10000,"description":"stress test"}
+		obj_json['project_name'] = tenant_name
+		obj_json['owner_id'] = owner_id
+		rtn = self.call_rest_api(url,"POST",json=json.dumps(obj_json))
+		if json.loads(rtn).has_key('project_id'):
+			info('add tenant successfully ~')
+			return True
+		else:
+			error('add tenant failed !')
+			return False
+
+
+	def get_tenant_id_by_name(self,ip,tenant_name):
+		url = "http://" + ip + ":30000/service/auth/api/projects"
+		params = "page=1&page_size=1000&project_name=&is_public=0&tag=namespace&owner=1&type=4"
+		rtn = self.call_rest_api(url,"GET",params=params)
+		for tenant_list in json.loads(rtn):
+			if tenant_list['name'] == tenant_name:
+				return tenant_list['project_id']
+		return None
+
+	def delete_tenant(self,ip,tenant_name):
+		tenant_id = self.get_tenant_id_by_name(ip,tenant_name)
+		if tenant_id == None:
+			error('can not get the tenant id')
+			return False
+		info('tenant %s id is %d' % (tenant_name,tenant_id))
+		url = "http://" + ip + ":30000/service/tenant/api/tenant/" + str(tenant_id)
+		rtn = self.call_rest_api(url,"DELETE")
+		if rtn != "":
+			info('delete tenant %s successfully~' % tenant_name)
+			return True
+		info("delete tenant %s failed" % tenant_name)
+		return False
+
+	def get_all_tenant_name(self,ip):
+		tenant_name_list = []
+		url = "http://" + ip + ":30000/service/auth/api/projects"
+		params = "page=1&page_size=1000&project_name=&is_public=0&tag=namespace&owner=1&type=4"			
+		rtn = self.call_rest_api(url,"GET",params=params)
+		for tenant_list in json.loads(rtn):
+			tenant_name_list.append(tenant_list['name'])
+		return tenant_name_list
+	def delete_all_tenant(self,ip):
+		tenant_list = self.get_all_tenant_name(ip)
+		for tenant_name in tenant_list:
+			if tenant_name != 'default':
+				self.delete_tenant(ip,tenant_name)
+		return True
+
+
+
+
+
 
 
 

@@ -25,7 +25,7 @@ def debug(*args):
 def info(*args):
     msg = ' '.join([ str(x) for x in args ])
     try:
-        print msg
+        print "\033[32m" + msg + "\033[0m"
     except:
         pass
 
@@ -37,7 +37,7 @@ def error(*args):
     pid = os.getpid()
     message = '%s [%s]: %s' % (d, pid, msg)
     try:
-        print msg
+        print "\033[31m" + msg + "\033[0m"
     except:
         pass
 
