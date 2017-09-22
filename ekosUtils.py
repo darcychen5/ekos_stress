@@ -38,7 +38,7 @@ class Utils:
 					m = re.search(pattern, newurl)
 					ipaddr = m.group()
 					cookies = self._get_cookie(ipaddr)
-					info("new cookies created %s" %ipaddr)	
+					debug("new cookies created %s" %ipaddr)	
 				continue
 			return response.read()
 		return None
@@ -83,7 +83,7 @@ class Utils:
 		return
 
 	def ssh_cmd(self, ip, username, password, cmd, sync_run=True, timeout=None,lines=False):
-		info('running: %s' % cmd)
+		debug('running: %s' % cmd)
 		rtn_dict = {}
 		ssh = paramiko.SSHClient()
 		ssh.load_system_host_keys()
@@ -835,7 +835,7 @@ class Utils:
 
 
 	def clean_testbed(self,ip):
-		info('cleaning testbed...')
+		debug('cleaning testbed...')
 		tenant_list = self.get_all_tenant_name(ip)
 		for tenant in tenant_list:
 			self.delete_all_app(ip,namespace=tenant)
@@ -1039,6 +1039,30 @@ class Utils:
 			if tenant_name != 'default':
 				self.delete_tenant(ip,tenant_name)
 		return True
+
+#-----------------------------images related--------------------------------------#
+
+	def get_all_images(self,ip):
+		images_list = []
+		url = "http://" +ip + ":30000/service/registry/api/repositories"
+		params = "page=1&page_size=1000&project_id=0&q=&detail=1"
+		rtn = self.call_rest_api(url,"GET",params=params)
+		for all_list in json.loads(rtn):
+			images_list.append(all_list['repository_name'])
+		return images_list
+
+	def delete_image(self,ip,image,tag='latest'):
+		url = "http://" + ip +":30000/service/registry/api/repositories/" + image + "/tags/"
+		params = "tag=" + tag
+		rtn = self.call_rest_api(url,"DELETE",params=params)
+		print rtn
+		if json.loads(rtn)['status'] != 'ok':
+			error('delete image %s failed' % image)
+			return False
+		info('delete image %s succcessfully~' % image)
+		return True
+
+
 
 
 

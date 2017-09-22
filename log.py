@@ -16,11 +16,15 @@ def debug(*args):
     d = datetime.datetime.now().strftime(FORMAT)
     pid = os.getpid()
     message = '%s [%s]: %s' % (d, pid, msg)
+    try:
+        print msg
+    except:
+        pass
+
     f = open(LOG_FILENAME, 'a')
     f.write('%s\n' % message)
     f.flush()
     f.close()
-
 
 def info(*args):
     msg = ' '.join([ str(x) for x in args ])
