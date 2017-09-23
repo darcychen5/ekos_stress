@@ -1040,6 +1040,41 @@ class Utils:
 				self.delete_tenant(ip,tenant_name)
 		return True
 
+	def create_user(self,ip,username,email='chenlong@ghostcloud.cn'):
+		obj_json = {"email":"chenlong@ghostcloud.cn","username":"darcy11","realname":"darcy11"}
+		obj_json['email'] = email
+		obj_json['username'] = username
+		obj_json['realname'] = username
+		url = "http://" + ip + ":30000/service/auth/api/users"
+		rtn = self.call_rest_api(url,"POST",json=json.dumps(obj_json))
+		if json.loads(rtn)['user_id']:
+			info('create user %s successfully~' % username)
+			return json.loads(rtn)['user_id']
+		else:
+			error('create user %s failed!~' % username)
+			return None
+
+	def get_user_id_by_name(self,ip,uername):
+		url = "http://" +ip + ":30000/service/auth/api/users"
+		params = "username=&page=1&page_size=1000"
+		rtn = self.call_rest_api(url,"GET",params=params)
+		for users in json.loads(rtn):
+			if users['username'] == uername:
+				return users['user_id']
+			else:
+				return None
+
+
+	def delete_user(self,ip,username):
+		debug('deleting user %s ...' % username)
+		project_id = self.get_user_id_by_name(ip,username)
+		url = "http://" + ip + ":30000/service/auth/api/users/" + str(project_id)
+		self.call_rest_api(url,"DELETE")
+
+
+
+
+
 #-----------------------------images related--------------------------------------#
 
 	def get_all_images(self,ip):
@@ -1061,6 +1096,42 @@ class Utils:
 			return False
 		info('delete image %s succcessfully~' % image)
 		return True
+
+	def create_registry(self,ip,registry_name,owner_id=10000,public=0,type1=8):
+		url = "http://" + ip + ":30000/service/registry/api/projects"
+		obj_json = {"type":8,"project_name":"test-default","owner_id":10000,"public":0}
+		obj_json['type'] = type1
+		obj_json['owner_id'] = owner_id
+		obj_json['public'] = public
+		obj_json['project_name'] = registry_name
+		rtn = self.call_rest_api(url,"POST",json=json.dumps(obj_json))
+		if json.loads(rtn)['project_name'] != None:
+			info('create registry %s successfully~' % registry_name)
+			return True
+		else:
+			error('create registry %s failed' % registry_name)
+			return False
+
+	def get_regitry_id_by_name(self,ip,registry_name):
+		url = "http://" + ip + ":30000/service/registry/api/projects"
+		params = "page=1&page_size=1000&project_name=&is_public=0&type=8"
+		rtn = self.call_rest_api(url,"GET",params=params)
+		for n in json.loads(rtn):
+			if n['name'] == registry_name:
+				return n['project_id']
+		return None
+
+
+	def delete_registry(self,ip,registry_name):
+		debug('deleting registry: %s' % registry_name)
+		project_id = self.get_regitry_id_by_name(ip,registry_name)
+		if not project_id:
+			error('can not get the project id')
+			return None
+		url = "http://" + ip + ":30000/service/registry/api/projects/" + str(project_id)
+		self.call_rest_api(url,"DELETE")
+		return True
+
 
 
 

@@ -12,12 +12,15 @@ def run_test():
 	tenant_name_prefix = "tenant-"
 	app_num_per_tenamt = 2
 	tenant_num = 100
+	username = 'darcytest'
 	#add tenant
+	# create a user
+	project_id = my_utils.create_user(ip,username)
 
 	for i in range(tenant_num):
 		tenant_name = tenant_name_prefix + str(i)
 		print tenant_name
-		rtn = my_utils.add_tenant(ip,tenant_name)
+		rtn = my_utils.add_tenant(ip,tenant_name,owner_id=project_id)
 		if rtn != True:
 			sys.exit()
 		#create app
