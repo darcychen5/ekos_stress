@@ -43,13 +43,13 @@ class Utils:
 			return response.read()
 		return None
 
-	def _get_cookie(self,ipaddr): 
+	def _get_cookie(self,ipaddr,username='admin',password='admin12345'): 
 		all_cookie = ""
 		url = "http://" + ipaddr + ":30000/login"
 		cj = cookielib.CookieJar()
 		opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
 		urllib2.install_opener(opener)
-		response = self.call_rest_api(url,"POST",params="username=admin&password=admin12345")
+		response = self.call_rest_api(url,"POST",params="username=" + username + "&password=" + password)
 		for index,cookie in enumerate(cj):
 			tmp = cookie.name + "=" + cookie.value + "; "
 			all_cookie += tmp
@@ -510,7 +510,7 @@ class Utils:
 		#appstore
 		url = "http://" + ip + ":30000/api/plugin"
 		json_appstore = {"name":"appstore"}
-		#json_ci = {"name":"ci"}
+		json_ci = {"name":"ci"}
 		json_network = {"name":"network"}
 		json_node = {"name":"node"}
 		json_registry = {"name":"registry"}
@@ -518,7 +518,7 @@ class Utils:
 		json_storage = {"name":"storage"}
 		json_tenant = {"name":"tenant"}
 
-		plugin_lists = ["json_node","json_stack","json_appstore","json_storage","json_network","json_registry","json_tenant"]
+		plugin_lists = ["json_node","json_stack","json_appstore","json_ci","json_storage","json_network","json_registry","json_tenant"]
 		for plugin in plugin_lists:
 			rtn = self.call_rest_api(url,"POST",json=json.dumps(eval(plugin)))
 			if json.loads(rtn)['status'] == "ok":
@@ -625,7 +625,6 @@ class Utils:
 		cmd = "kubectl get nodes |grep node* | awk '{print $1}'"
 		rtn = self.ssh_cmd(ip,username,password,cmd,lines=True)
 		return rtn
-
 	def check_node_ready(self,ip,username,password):
 		node_list = self.get_nodes(ip,username,password)
 		for node in node_list:
@@ -848,6 +847,9 @@ class Utils:
 			self.remove_all_nfs(ip,namespace=tenant)
 
 		self.delete_all_tenant(ip)
+		self.delete_stress_images(ip)
+		self.delete_all_created_registry(ip)
+		self.delete_all_created_users(ip)
 		return True
 
 #-----------------------------storage related-----------------------------
@@ -889,7 +891,7 @@ class Utils:
 		for nfs_name in json.loads(rtn)['items']:
 			nfs_list.append(nfs_name['name']) 		
 		if not nfs_list:
-			info("there is no nfs!")
+			debug("there is no nfs!")
 			return None
 		return nfs_list
 
@@ -1049,7 +1051,8 @@ class Utils:
 		rtn = self.call_rest_api(url,"POST",json=json.dumps(obj_json))
 		if json.loads(rtn)['user_id']:
 			info('create user %s successfully~' % username)
-			return json.loads(rtn)['user_id']
+			info('your password is %s' % json.loads(rtn)['generated_password'])
+			return json.loads(rtn)['user_id'],json.loads(rtn)['generated_password']
 		else:
 			error('create user %s failed!~' % username)
 			return None
@@ -1070,11 +1073,20 @@ class Utils:
 		project_id = self.get_user_id_by_name(ip,username)
 		url = "http://" + ip + ":30000/service/auth/api/users/" + str(project_id)
 		self.call_rest_api(url,"DELETE")
-
-
-
-
-
+	def get_all_users(self,ip):
+		users_list = []
+		url = "http://" +ip + ":30000/service/auth/api/users"
+		params = "username=&page=1&page_size=1000"
+		rtn = self.call_rest_api(url,"GET",params=params)
+		for users in json.loads(rtn):
+			users_list.append(users)
+		return users_list
+	def delete_all_created_users(self,ip):
+		users_list = self.get_all_users(ip)
+		for users in users_list:
+			if users['username'] != 'admin':
+				self.delete_user(ip,users['username'])
+		return True
 #-----------------------------images related--------------------------------------#
 
 	def get_all_images(self,ip):
@@ -1090,14 +1102,19 @@ class Utils:
 		url = "http://" + ip +":30000/service/registry/api/repositories/" + image + "/tags/"
 		params = "tag=" + tag
 		rtn = self.call_rest_api(url,"DELETE",params=params)
-		print rtn
 		if json.loads(rtn)['status'] != 'ok':
 			error('delete image %s failed' % image)
 			return False
 		info('delete image %s succcessfully~' % image)
 		return True
+	def delete_stress_images(self,ip):
+		images_list = self.get_all_images(ip)
+		for image in images_list:
+			if re.search('.*stress.*',image):
+				self.delete_image(ip,image)
+		return True
 
-	def create_registry(self,ip,registry_name,owner_id=10000,public=0,type1=8):
+	def create_registry(self,ip,registry_name,owner_id=10000,public=1,type1=8):
 		url = "http://" + ip + ":30000/service/registry/api/projects"
 		obj_json = {"type":8,"project_name":"test-default","owner_id":10000,"public":0}
 		obj_json['type'] = type1
@@ -1131,6 +1148,21 @@ class Utils:
 		url = "http://" + ip + ":30000/service/registry/api/projects/" + str(project_id)
 		self.call_rest_api(url,"DELETE")
 		return True
+	def get_all_registry(self,ip):
+		registry_list = []
+		url = "http://" + ip + ":30000/service/registry/api/projects"
+		params = "page=1&page_size=1000&project_name=&is_public=0&type=8"
+		rtn = self.call_rest_api(url,"GET",params=params)
+		for n in json.loads(rtn):
+			registry_list.append(n['name'])
+		return 	registry_list
+	def delete_all_created_registry(self,ip):
+		registry_list = self.get_all_registry(ip)
+		for registry in registry_list:
+			if registry != "library":
+				self.delete_registry(ip,registry)
+		return True
+
 
 
 

@@ -15,7 +15,9 @@ def run_test():
 	username = 'darcytest'
 	#add tenant
 	# create a user
-	project_id = my_utils.create_user(ip,username)
+	project_id,password = my_utils.create_user(ip,username)
+	print project_id
+	print password
 
 	for i in range(tenant_num):
 		tenant_name = tenant_name_prefix + str(i)
@@ -64,6 +66,8 @@ def run_test():
 	rtn = my_utils.clean_testbed(ip)
 	if rtn != True:
 		return False
+
+
 	return True
 
 #main

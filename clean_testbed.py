@@ -1,9 +1,10 @@
-import os,sys,time,json
-sys.path.insert(0, '/root/ekos_stress')
+import ekosUtils,json,time,sys,yaml
 from log import *
-import ekosUtils
 my_utils = ekosUtils.Utils()
 ip = sys.argv[1]
 
-rtn = my_utils.clean_testbed(ip)
+'''
+rtn = my_utils.get_all_app(ip)
 print rtn
+'''
+rtn = my_utils.clean_testbed(ip)

@@ -90,12 +90,12 @@ for tc in os.listdir(workdir):
 		info(line)
 		if re.search('ok',line):
 			info('testcase: %s execute %d successfully' % (tc_name,i))
-			my_utils.bar_sleep(300)
 		else:
 			info('testcase %s execute %d failed!' % (tc_name,i))
 			flag = 1
 			break
-		my_utils.bar_sleep(60)
+		if i != cycle_number:
+			my_utils.bar_sleep(300)
 
 	end_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
 	test_result[tc_name]['tc_id'] = tc_name

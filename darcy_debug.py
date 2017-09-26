@@ -5,5 +5,5 @@ import ekosUtils
 my_utils = ekosUtils.Utils()
 ip = sys.argv[1]
 
-rtn = my_utils.delete_user(ip,'darcy222')
+rtn = my_utils.check_node_ready(ip,'root','password')
 print rtn
