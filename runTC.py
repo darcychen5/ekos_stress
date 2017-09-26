@@ -55,11 +55,11 @@ if str(refresh_testbed) == "True" or str(refresh_testbed) == "true":
 	if rtn != True:
 		error('active plugin failed')
 		sys.exit()
-
+#get cookie
+my_utils._get_cookie(master_ip)
 #check if need upload stress img
-cmd = "docker images |grep stress_centos"
-rtn = my_utils.ssh_cmd(master_ip,"root","password",cmd)
-if not rtn['stdout']:
+images_list = my_utils.get_all_images(master_ip)
+if "library/stress_centos" not in images_list:
 	info('download and push images!')
 	my_utils.download_upload_img(master_ip)
 
