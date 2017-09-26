@@ -102,22 +102,24 @@ for tc in os.listdir(workdir):
 	test_result[tc_name]['start_time'] = start_time
 	test_result[tc_name]['end_time'] = end_time
 	if flag == 0:
+		test_result[tc_name]['failed_cycle'] = 'NA'
 		test_result[tc_name]['result'] = "success"
 		success_case_num = success_case_num + 1
 	else:
+		test_result[tc_name]['failed_cycle'] = str(i)
 		test_result[tc_name]['result'] = "failed"
 		failed_case_num = failed_case_num + 1
 
 
 info(test_result)
-all_content = "<h3>build: %s  </h3> \n test cycle: %d \n success: %d \n failed: %d \n testbed: %s \n <tr bgcolor=\"blue\" style=\"color:white\"><td>TC ID</td><td>Start Time</td><td>End Time</td><td>Result</td></tr>" % (test_build,cycle_number,success_case_num,failed_case_num,testbed)
+all_content = "<h3>build: %s  </h3> \n test cycle: %d \n success: %d \n failed: %d \n testbed: %s \n <tr bgcolor=\"blue\" style=\"color:white\"><td>TC ID</td><td>Start Time</td><td>End Time</td><td>failed cycle</td><td>Result</td></tr>" % (test_build,cycle_number,success_case_num,failed_case_num,testbed)
 for result in test_result.keys():
 	if test_result[result]['result'] == 'failed':
-		content = "<tr style=\"font-size:15px\"><td>%s</td><td>%s</td><td>%s</td><td ><font color=\"red\">%s</font></td></tr>\n" % (test_result[result]['tc_id'],test_result[result]['start_time'],test_result[result]['end_time'],test_result[result]['result'])
+		content = "<tr style=\"font-size:15px\"><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td ><font color=\"red\">%s</font></td></tr>\n" % (test_result[result]['tc_id'],test_result[result]['start_time'],test_result[result]['end_time'],test_result[tc_name]['failed_cycle'],test_result[result]['result'])
 	else:
-		content = "<tr style=\"font-size:15px\"><td>%s</td><td>%s</td><td>%s</td><td ><font color=\"green\">%s</font></td></tr>\n" % (test_result[result]['tc_id'],test_result[result]['start_time'],test_result[result]['end_time'],test_result[result]['result'])
+		content = "<tr style=\"font-size:15px\"><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td ><font color=\"green\">%s</font></td></tr>\n" % (test_result[result]['tc_id'],test_result[result]['start_time'],test_result[result]['end_time'],test_result[tc_name]['failed_cycle'],test_result[result]['result'])
 	all_content = all_content + '\n' + content
 html_content = "<table border=\"1\" cellpadding=\"2\" width=\"800\">" + all_content + "</table>"
-cmd = "echo \"" + html_content + "\"" "| mail -s \"$(echo -e \"stress result\\nContent-Type: text/html;charset=gb2312\")\" chenlong@ghostcloud.cn fengqianjun@ghostcloud.cn helimeng@ghostcloud.cn lichengsong@ghostcloud.cn xiebin@ghostcloud.cn, zhufuchun@ghostcloud.cn wangmeng@ghostcloud.cn weijunxu@ghostcloud.cn lixu@ghostcloud.cn"
+cmd = "echo \"" + html_content + "\"" "| mail -s \"$(echo -e \"stress result\\nContent-Type: text/html;charset=gb2312\")\" chenlong@ghostcloud.cn helimeng@ghostcloud.cn lichengsong@ghostcloud.cn xiebin@ghostcloud.cn zhufuchun@ghostcloud.cn wangmeng@ghostcloud.cn weijunxu@ghostcloud.cn lixu@ghostcloud.cn fengqianjun@ghostcloud.cn"
 my_utils.runcmd(cmd)
 
