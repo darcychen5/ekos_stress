@@ -12,19 +12,9 @@ app_prefix = "hello-nfs-"
 nfs_name_prefix = "darcy-nfs-"
 nfs_dir_name_prefix = "/mnt/nfs-share-"
 nfs_name_list = []
-volume_number = 5
-app_num = 25
+volume_number = 40
 nfs_num = 5
 
-stress_node_list = [{'name': 'stress1','vm':["EKOS-Offline-Stress-12","EKOS-Offline-Stress-13","EKOS-Offline-Stress-14"]},{'name': 'stress2','vm':["EKOS-Offline-Stress-17","EKOS-Offline-Stress-18","EKOS-Offline-Stress-19"]},{'name': 'stress3','vm':["EKOS-offline-darcy-62","EKOS-offline-darcy-63","EKOS-offline-darcy-64"]}]
-node_list = []
-for my_list in stress_node_list:
- 	if my_list['name'] == testbed:
- 		node_list = my_list['vm']
- 		break
-if not node_list:
- 	error('wrong testbed!')
- 	sys.exit()
 
 def run_test():
 	#add nfs 
@@ -64,8 +54,7 @@ def run_test():
 	my_utils.bar_sleep(5)
 		
 	url = "http://" + ip + ":30000/service/stack/api/app" 
-	#obj_json = {"name":"hello-test","namespace":"default","stateful":"share","replicas":1,"cpu":125,"memory":128,"diskSize":20000,"containers":[{"name":"hello-test","image":"registry.ekos.local/library/hello:latest","command":"","envs":[],"logDir":"","healthCheck":None,"cpuPercent":100,"memPercent":100}],"service":{"ports":[{"protocol":"TCP","containerPort":80,"servicePort":999}]},"volumes":[{"persistentVolumeClaim":{"claimName":"volume-1","mountPath":"/mnt/volume/","readOnly":False}}],"desc":""}
-	obj_json = {"name":"stress-test-2","namespace":"default","stack":app_stack_name,"stateful":"share","replicas":1,"cpu":125,"memory":64,"diskSize":20000,"containers":[{"name":"stress-test-4","image":"registry.ekos.local/library/hello:latest","command":"sh","envs":[],"logDir":"","healthCheck":None,"cpuPercent":100,"memPercent":100,"stdin":False,"tty":False,"cfgFileMounts":[],"secretMounts":[]}],"service":{"ports":[{"protocol":"TCP","containerPort":88,"servicePort":888}]},"volumes":[{"persistentVolumeClaim":{"claimName":"volume-test-2","mountPath":"/mnt/volume/","readOnly":False}}],"desc":""}
+	obj_json = {"name":"stress-test-2","namespace":"default","stack":app_stack_name,"stateful":"share","replicas":1,"cpu":125,"memory":64,"diskSize":20000,"containers":[{"name":"stress-test-4","image":"registry.ekos.local/library/hello:latest","command":"sh","envs":[],"logDir":"","healthCheck":None,"cpuPercent":100,"memPercent":100,"stdin":False,"tty":False,"cfgFileMounts":[],"secretMounts":[]}],"service":{"ports":[{"protocol":"TCP","containerPort":88,"servicePort":88}]},"volumes":[{"persistentVolumeClaim":{"claimName":"volume-test-2","mountPath":"/mnt/volume/","readOnly":False}}],"desc":""}
 
 	
 	#create service
@@ -83,7 +72,7 @@ def run_test():
 			else:
 				sys.exit()
 
-	my_utils.bar_sleep(120)
+	my_utils.bar_sleep(600)
 
 	print"check_app_status first time"
 	#check app status
@@ -91,27 +80,17 @@ def run_test():
 	if rtn != True:
 		sys.exit()
 
-	"""
-	rtn = my_utils.k8s_pod_health_check(ip)
-				if rtn != True:
-					return False
-	"""
-
-	#let runnning 30 min
-	my_utils.bar_sleep(120)
 
 	print"check_app_status after runnning 30 min"
+	#let runnning 30 min
+	my_utils.bar_sleep(1800)
+
+	print"check_nfs_status after runnning 30 min"
 	#check app status
 	rtn = my_utils.check_service_status(ip,app_list)
 	if rtn != True:
 		sys.exit()
 
-	"""
-	rtn = my_utils.k8s_pod_health_check(ip)
-				if rtn != True:
-					return False
-	"""
-	print"check_nfs_status after runnning 30 min"
 	#check nfs status
 	nfs_list = my_utils.get_nfs_list(ip)
 	rtn = my_utils.check_service_status(ip,nfs_list)

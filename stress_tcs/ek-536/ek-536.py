@@ -2,8 +2,6 @@ import sys,json,time,random
 sys.path.insert(0, '/root/ekos_stress/')
 import ekosUtils
 from log import *
-
-
 ip = sys.argv[1]
 testbed = sys.argv[2]
 stress_svcname_tmp = "powercycle-"
@@ -12,9 +10,6 @@ svc_num = 4
 app_num = 50
 my_utils = ekosUtils.Utils()
 node_list = eval(my_utils._get_config(testbed,"node_name_list","/root/ekos_stress/install/config.ini"))
-
-
-
 def run_test():
         #create stress_app
         cookies = my_utils._get_cookie(ip)
@@ -33,8 +28,8 @@ def run_test():
                     else:
                             return False
 
-        info('sleep 120 seconds')
-        my_utils.bar_sleep(300)
+        info('sleep 600 seconds')
+        my_utils.bar_sleep(600)
 
         #get app name
         app_list = my_utils.get_all_app(ip)
@@ -82,15 +77,6 @@ def run_test():
             if rtn != True:
                 return False
         return True
-
-
-"""
-        rtn = my_utils.k8s_pod_health_check(ip)
-        if rtn != True:
-                return False
-"""
-
-
 #clean testbed
 #main
 rtn = run_test()

@@ -2,18 +2,15 @@ import sys,json,time,random
 sys.path.insert(0, '/root/ekos_stress/')
 import ekosUtils
 from log import *
-stress_node_list = [{'name': 'stress1','vm':["EKOS-Offline-Stress-12","EKOS-Offline-Stress-13","EKOS-Offline-Stress-14"]},{'name': 'stress2','vm':["EKOS-Offline-Stress-17","EKOS-Offline-Stress-18","EKOS-Offline-Stress-19"]},{'name': 'stress3','vm':["EKOS-offline-darcy-62","EKOS-offline-darcy-63","EKOS-offline-darcy-64"]}]
 ip = sys.argv[1]
-testbed = sys.argv[2]
 my_utils = ekosUtils.Utils()
-
 
 def run_test():
 	app_stack_name = "stress-app"
 	volume_prefix = "volume-"
 	app_prefix = "stress-nfs-"
-	volume_number = 300
-	app_num = 300
+	volume_number = 200
+	app_num = 200
 	nfs_name = "darcy-nfs"
 
 	#add nfs 
@@ -89,5 +86,4 @@ if rtn != True:
 	error('execute TC ek-474 failed!')
 	sys.exit()
 else:
-	#my_utils.clean_testbed(ip)
 	info('ok')

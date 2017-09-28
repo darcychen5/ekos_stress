@@ -3,27 +3,14 @@ sys.path.insert(0, '/root/ekos_stress/')
 import ekosUtils
 from log import *
 my_utils = ekosUtils.Utils()
-
 ip = sys.argv[1]
-testbed = sys.argv[2]
-svc_num = 10
+app_name = "stress-app"
+svc_num = 200
 stress_svcname_tmp = "stress-bootstorm-"
 cookies = my_utils._get_cookie(ip)
 
-
-stress_node_list = [{'name': 'stress1','vm':["EKOS-Offline-Stress-12","EKOS-Offline-Stress-13","EKOS-Offline-Stress-14"]},{'name': 'stress2','vm':["EKOS-Offline-Stress-17","EKOS-Offline-Stress-18","EKOS-Offline-Stress-19"]},{'name': 'stress3','vm':["EKOS-offline-darcy-62","EKOS-offline-darcy-63","EKOS-offline-darcy-64"]},{'name': 'stress4','vm':["EKOS-offline-Stress-10-84","EKOS-offline-Stress-10-85","EKOS-offline-Stress-10-86","EKOS-offline-Stress-10-87","EKOS-offline-Stress-10-88","EKOS-offline-Stress-10-89"]}]
-node_list = []
-for my_list in stress_node_list:
-	if my_list['name'] == testbed:
-		node_list = my_list['vm']
-		break
-if not node_list:
-	error('wrong testbed!')
-	sys.exit()
-
 def run_test():
 	#create stress_app
-	app_name = "stress-app"
 	cookies = my_utils._get_cookie(ip)
 	my_utils.create_app(ip,app_name)
 
@@ -41,35 +28,32 @@ def run_test():
 		else:
 			return False
 			
-	info('sleep 300 seconds')
+	info('sleep 60 seconds')
 	my_utils.bar_sleep(60)
 			
 	#get svc name
-	svc_list = []
-	for i in range(svc_num):
-		svcname = stress_svcname_tmp + str(i)
-		svc_list.append(svcname)
+	svc_list = my_utils.get_sevice_by_app(ip,app_name)
 	print "check_svc_status first time"
-
 	#check app status
-	rtn = my_utils.check_service_status(ip,svc_list)
-	if rtn != True:
-		return False	
-
-	"""
-	rtn = my_utils.k8s_pod_health_check(ip)
-	if rtn != True:
-		return False
-	"""
-	my_utils.delete_app(ip,"stress-app")
-
-	return True
+	times =1
+	while times <= 10:
+		rtn = my_utils.check_service_status(ip,svc_list)
+		if times == 11:
+			info('check 10 times done! have svc not running!tc-649 faied!')
+			return False
+		if rtn != True:
+			info('this is %s times check,have svc not Running,sleep 60 try again'%times)
+			my_utils.bar_sleep(60)
+			times = times +1
+		else:
+			return True
+			break
 		
 #main
 rtn = run_test()
 if rtn == True:
-	#my_utils.clean_testbed(ip)
-	info('create-delete-cycle is ok')
+	my_utils.delete_all_app(ip)
+	info('ok')
 else:
 	error('run test case ek-649 failed!')
 

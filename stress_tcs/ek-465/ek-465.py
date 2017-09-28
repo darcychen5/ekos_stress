@@ -8,22 +8,8 @@ lb_name = "stress-lb"
 app_name = "stress-app"
 stress_svcname_tmp = "stress-bootstorm-lb-"
 svc_num = 300
-
 ip = sys.argv[1]
-testbed = sys.argv[2]
-
-
-stress_node_list = [{'name': 'stress1','vm':["EKOS-Offline-Stress-12","EKOS-Offline-Stress-13","EKOS-Offline-Stress-14"]},{'name': 'stress2','vm':["EKOS-Offline-Stress-17","EKOS-Offline-Stress-18","EKOS-Offline-Stress-19"]},{'name': 'stress3','vm':["EKOS-offline-darcy-62","EKOS-offline-darcy-63","EKOS-offline-darcy-64"]}]
-node_list = []
-for my_list in stress_node_list:
-	if my_list['name'] == testbed:
-		node_list = my_list['vm']
-		break
-if not node_list:
-	error('wrong testbed!')
-	sys.exit()
-
-
+node_list = eval(my_utils._get_config(testbed,"node_name_list","/root/ekos_stress/install/config.ini")) 
 
 def run_test():
 	#create stress_app

@@ -5,26 +5,15 @@ from log import *
 my_utils = ekosUtils.Utils()
 
 ip = sys.argv[1]
-testbed = sys.argv[2]
-svc_num = 1
+svc_num = 2
 app_num = 100
 svcname_tmp = "stress-centos-"
 appname_tmp = "stress-app-"
 cookies = my_utils._get_cookie(ip)
 svc_list = []
 
-stress_node_list = [{'name': 'stress1','vm':["EKOS-Offline-Stress-12","EKOS-Offline-Stress-13","EKOS-Offline-Stress-14"]},{'name': 'stress2','vm':["EKOS-Offline-Stress-17","EKOS-Offline-Stress-18","EKOS-Offline-Stress-19"]},{'name': 'stress3','vm':["EKOS-offline-darcy-62","EKOS-offline-darcy-63","EKOS-offline-darcy-64"]},{'name': 'stress4','vm':["EKOS-offline-Stress-10-84","EKOS-offline-Stress-10-85","EKOS-offline-Stress-10-86","EKOS-offline-Stress-10-87","EKOS-offline-Stress-10-88","EKOS-offline-Stress-10-89"]}]
-node_list = []
-for my_list in stress_node_list:
-	if my_list['name'] == testbed:
-		node_list = my_list['vm']
-		break
-if not node_list:
-	error('wrong testbed!')
-	sys.exit()
-
 def run_test():
-	#create stress-app
+	#cr:eate stress-app
 	for i in range(app_num):	
 		app_name = appname_tmp + str(i)
 		cookies = my_utils._get_cookie(ip)
@@ -43,31 +32,42 @@ def run_test():
 			else:
 				return False					
 	info('sleep 60 seconds')
-	my_utils.bar_sleep(300)
+	my_utils.bar_sleep(60)
 					
-	#get svc name
-	# svc_list = []
-	# for i in range(app_num*svc_num):
-	# 	svcname = svcname_tmp + str(i)
-	# 	svc_list.append(svcname)
-	
 	#check svc status
 	print "check_svc_status first time"	
-	rtn = my_utils.check_service_status(ip,svc_list)
-	if rtn != True:
-		return False	
+        times = 1
+        while times <= 11:
+                rtn = my_utils.check_service_status(ip,svc_list)
+                if times == 11:
+			info('check 10 times done!have svc not running tc-811 faied!')
+                        return False
+                if rtn != True:
+                        info("this is %s times check,please wait 60 seconds"%times)
+                        my_utils.bar_sleep(60)
+                        times=times+1
+                else:
+                        break
 
-	info("let it runnning 60s")
-	my_utils.bar_sleep(60)
+	info("let it runnning 600s")
+	my_utils.bar_sleep(600)
 	
 	#check svc status
 	print "check_svc_status second time"	
-	rtn = my_utils.check_service_status(ip,svc_list)
-	if rtn != True:
-		return False
-
-	return True
-		
+        times = 1
+        while times <= 11:
+                rtn = my_utils.check_service_status(ip,svc_list)
+                if times == 11:
+                        info('check 10 times done!have svc not running tc-811 faied!')
+                        return False
+                if rtn != True:
+                        info("this is %s times check,please wait 60 seconds"%times)
+                        my_utils.bar_sleep(60)
+                        times=times+1
+                else:
+			return True
+                        break
+	
 #main
 rtn = run_test()
 if rtn == True:

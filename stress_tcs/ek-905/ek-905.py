@@ -5,22 +5,10 @@ from log import *
 my_utils = ekosUtils.Utils()
 
 ip = sys.argv[1]
-testbed = sys.argv[2]
-svc_num = 3
+svc_num = 2
 svcname_tmp = "stress-centos-"
 appname = "stress-app"
 cookies = my_utils._get_cookie(ip)
-svc_list = []
-
-stress_node_list = [{'name': 'stress1','vm':["EKOS-Offline-Stress-12","EKOS-Offline-Stress-13","EKOS-Offline-Stress-14"]},{'name': 'stress2','vm':["EKOS-Offline-Stress-17","EKOS-Offline-Stress-18","EKOS-Offline-Stress-19"]},{'name': 'stress3','vm':["EKOS-offline-darcy-62","EKOS-offline-darcy-63","EKOS-offline-darcy-64"]},{'name': 'stress4','vm':["EKOS-offline-Stress-10-84","EKOS-offline-Stress-10-85","EKOS-offline-Stress-10-86","EKOS-offline-Stress-10-87","EKOS-offline-Stress-10-88","EKOS-offline-Stress-10-89"]}]
-node_list = []
-for my_list in stress_node_list:
-	if my_list['name'] == testbed:
-		node_list = my_list['vm']
-		break
-if not node_list:
-	error('wrong testbed!')
-	sys.exit()
 
 def run_test():
 	#create stress-app	
@@ -46,19 +34,15 @@ def run_test():
 	info("create all svc success,sleep 10 minutes")
 	my_utils.bar_sleep(600)				
 	#get svc name
-	svc_list = []
-	for i in range(svc_num):
-		svcname = svcname_tmp + str(i)
-		svc_list.append(svcname)
-	
+	svc_list = my_utils.get_service_by_app(ip,appname)
 	#check svc status
 	print "check_svc_status first time"	
 	rtn = my_utils.check_service_status(ip,svc_list)
 	if rtn != True:
 		return False	
 
-	info("let it runnning 60s")
-	my_utils.bar_sleep(60)
+	info("let it runnning 600s")
+	my_utils.bar_sleep(600)
 	
 	#check svc status
 	print "check_svc_status second time"	

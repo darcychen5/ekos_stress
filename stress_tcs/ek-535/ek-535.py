@@ -3,21 +3,11 @@ sys.path.insert(0, '/root/ekos_stress/')
 import ekosUtils
 from log import *
 my_utils = ekosUtils.Utils()
-
-stress_node_list = [{'name': 'stress1','vm':["EKOS-Offline-Stress-12","EKOS-Offline-Stress-13","EKOS-Offline-Stress-14"]},{'name': 'stress2','vm':["EKOS-Offline-Stress-17","EKOS-Offline-Stress-18","EKOS-Offline-Stress-19"]},{'name': 'stress3','vm':["EKOS-offline-darcy-62","EKOS-offline-darcy-63","EKOS-offline-darcy-64"]},{'name': 'stress4','vm':["EKOS-offline-Stress-10-84","EKOS-offline-Stress-10-85","EKOS-offline-Stress-10-86","EKOS-offline-Stress-10-87","EKOS-offline-Stress-10-88","EKOS-offline-Stress-10-89"]}]
-
-ip = sys.argv[1]
 testbed = sys.argv[2]
+ip = sys.argv[1]
 stress_svcname_tmp = "stress-ha-"
-svc_num = 50
-node_list = []
-for my_list in stress_node_list:
- 	if my_list['name'] == testbed:
- 		node_list = my_list['vm']
- 		break
-if not node_list:
- 	error('wrong testbed!')
- 	sys.exit()
+svc_num = 200
+node_list = eval(my_utils._get_config(testbed,"node_name_list","/root/ekos_stress/install/config.ini"))
 
 def run_test():
 	#create stress_app
@@ -28,7 +18,7 @@ def run_test():
 	#create stress_svc
 	cookies = my_utils._get_cookie(ip)
 	url = "http://" + ip + ":30000/service/stack/api/app"
-	obj_json = {"name":"stress-svc-ha-1","namespace":"default","stack":"stress-app","stateful":"none","replicas":1,"cpu":125,"memory":64,"diskSize":20000,"containers":[{"name":"container01","image":"registry.ekos.local/library/stress_centos:latest","command":"","envs":[],"logDir":"","healthCheck":None,"cpuPercent":33,"memPercent":33,"stdin":False,"tty":False,"cfgFileMounts":[],"secretMounts":[]},{"name":"container02","image":"registry.ekos.local/library/stress_centos:latest","command":"","envs":[],"logDir":"","healthCheck":None,"cpuPercent":33,"memPercent":33,"stdin":False,"tty":False,"cfgFileMounts":[],"secretMounts":[]},{"name":"container03","image":"registry.ekos.local/library/hello:latest","command":"","envs":[],"logDir":"","healthCheck":None,"cpuPercent":33,"memPercent":33,"stdin":False,"tty":False,"cfgFileMounts":[],"secretMounts":[]}],"service":{"ports":[{"protocol":"TCP","containerPort":666,"servicePort":888}]},"volumes":[],"desc":""}
+	obj_json = {"name":"stress-svc-ha-1","namespace":"default","stack":"stress-app","stateful":"none","replicas":1,"cpu":125,"memory":64,"diskSize":20000,"containers":[{"name":"container01","image":"registry.ekos.local/library/stress_centos:latest","command":"","envs":[],"logDir":"","healthCheck":None,"cpuPercent":33,"memPercent":33,"stdin":False,"tty":False,"cfgFileMounts":[],"secretMounts":[]},{"name":"container02","image":"registry.ekos.local/library/stress_centos:latest","command":"","envs":[],"logDir":"","healthCheck":None,"cpuPercent":33,"memPercent":33,"stdin":False,"tty":False,"cfgFileMounts":[],"secretMounts":[]},{"name":"container03","image":"registry.ekos.local/library/stress_centos:latest","command":"","envs":[],"logDir":"","healthCheck":None,"cpuPercent":33,"memPercent":33,"stdin":False,"tty":False,"cfgFileMounts":[],"secretMounts":[]}],"service":{"ports":[{"protocol":"TCP","containerPort":666,"servicePort":888}]},"volumes":[],"desc":""}
 	for i in range(svc_num):
 		obj_json['name'] = stress_svcname_tmp + str(i)
 		app_rtn = my_utils.call_rest_api(url,"POST",cookies=cookies,json=json.dumps(obj_json))
@@ -36,15 +26,11 @@ def run_test():
 			info('create application: %s successfully' %obj_json['name'])
 		else:
 			return False
-	info('sleep 300 seconds')
-	my_utils.bar_sleep(300)
+	info('sleep 800 seconds')
+	my_utils.bar_sleep(800)
 	
 	#get app name
-	svc_list = []
-	for i in range(svc_num):
-		svcname = stress_svcname_tmp + str(i)
-		svc_list.append(svcname)
-
+	svc_list = my_utils.get_service_by_app(ip,app_name)
 	#check app running
 	rtn = my_utils.check_service_status(ip,svc_list)
 	if rtn != True:
@@ -54,10 +40,6 @@ def run_test():
 	rtn = my_utils.check_node_ready(ip,"root","password")
 	if rtn != True:
 		return False
-		
-	#rtn = my_utils.k8s_pod_health_check(ip)
-	#if rtn != True:
-	#	return False
 
 	# power off random node	
 	poweroff_nodes = random.sample(node_list,1)
@@ -66,8 +48,7 @@ def run_test():
 
 	print"sleep 120 after power off random node"
 
-	info("sleep 120 seconds")
-	my_utils.bar_sleep(120)
+	my_utils.bar_sleep(600)
 		
 	#check app running
 	rtn = my_utils.check_service_status(ip,svc_list)
@@ -78,7 +59,7 @@ def run_test():
 	for poweroff_node in poweroff_nodes:
 		my_utils.poweron_vm(poweroff_node)
 
-	my_utils.bar_sleep(120)
+	my_utils.bar_sleep(300)
 
 	#check node ready
 	rtn = my_utils.check_node_ready(ip,"root","password")
@@ -90,14 +71,6 @@ def run_test():
 	if rtn != True:
 		return False
 
-	#rtn = my_utils.k8s_pod_health_check(ip)
-	#if rtn == True:
-	#	return True
-	#else:
-	#	return False
-
-	#clean testbed
-	#my_utils.clean_app(ip)
 
 	return True
 #main

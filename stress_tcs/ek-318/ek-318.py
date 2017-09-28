@@ -31,20 +31,24 @@ def run_test():
 		else:
 			return False
 	
-	info('sleep 300 seconds after creating all stress_svc ')
-	my_utils.bar_sleep(300)
+	info('sleep 60 seconds after creating all stress_svc ')
+	my_utils.bar_sleep(60)
 
 	#get app name
-	svc_list = []
-	for i in range(svc_num):
-		svcname = stress_svcname_tmp + str(i)
-		svc_list.append(svcname)
-
+	svc_list = my_utils.get_service_by_app(ip,app_name)
 	#check app running
-	rtn = my_utils.check_service_status(ip,svc_list)
-	if rtn != True:
-		return False
-	
+	times = 1
+	while times <= 10:
+		rtn = my_utils.check_service_status(ip,svc_list)
+		if times == 11:
+			info('check svc 10 times done!have svc not Running.run tc-318 faied!')
+			return False
+		if rtn != True:
+			info('this is %s times check,have svc not Running.sleep 60s will try again!'%times)
+			my_utils-bar_sleep(60)
+			times = times +1
+		else:
+			break
 	#power off nodes sequentially 
 	for node in node_list:
 		rtn = my_utils.poweroff_vm(node)
@@ -54,7 +58,7 @@ def run_test():
 		my_utils.bar_sleep(10)
 	
 	info('power off node done,sleep 60 seconds')  
-	my_utils.bar_sleep(30)
+	my_utils.bar_sleep(60)
 	
 	#power on all nodes	
 	for node in node_list:
@@ -63,8 +67,8 @@ def run_test():
 			error('power on node failed')
 			return False
 	
-	info('Power on node done,sleep 6 minutes')
-	my_utils.bar_sleep(800)
+	info('Power on node done,sleep 10 minutes')
+	my_utils.bar_sleep(600)
 	
 	#check node ready
 	rtn = my_utils.check_node_ready(ip,"root","password")
@@ -85,11 +89,6 @@ def run_test():
 	return True
 	
 
-"""
-	rtn = my_utils.k8s_pod_health_check(ip)
-	if rtn != True:
-		return False
-"""	
 
 	
 
