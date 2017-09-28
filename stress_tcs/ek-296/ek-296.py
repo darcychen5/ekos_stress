@@ -3,8 +3,7 @@ sys.path.insert(0, '/root/ekos_stress/')
 import ekosUtils
 from log import *
 my_utils = ekosUtils.Utils()
-
-
+testbed = sys.argv[2]
 ip = sys.argv[1]
 svc_num = 200
 stress_svcname_tmp = "stress-svc-ha-"
