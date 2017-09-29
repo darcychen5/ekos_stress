@@ -665,14 +665,49 @@ class Utils:
 	def download_upload_img(self,ip):
 		cmd = "curl -O http://192.168.1.234:8080/ekos/stressImages/stress_centos.tgz"
 		self.ssh_cmd(ip,"root","password",cmd)
+		cmd = "curl -O http://192.168.1.234:8080/ekos/stressImages/apache-client.tgz"
+		self.ssh_cmd(ip,"root","password",cmd)
+
+		cmd = "curl -O http://192.168.1.234:8080/ekos/stressImages/apache-server.tgz"
+		self.ssh_cmd(ip,"root","password",cmd)
+
+		cmd = "curl -O http://192.168.1.234:8080/ekos/stressImages/nginx.tgz"
+		self.ssh_cmd(ip,"root","password",cmd)
+
+		cmd = "curl -O http://192.168.1.234:8080/ekos/stressImages/ekos-mysql.tgz"
+		self.ssh_cmd(ip,"root","password",cmd)
 
 		cmd = "docker load -i stress_centos.tgz"
+		self.ssh_cmd(ip,"root","password",cmd)
+
+		cmd = "docker load -i apache-client.tgz"
+		self.ssh_cmd(ip,"root","password",cmd)
+
+		cmd = "docker load -i apache-server.tgz"
+		self.ssh_cmd(ip,"root","password",cmd)
+
+		cmd = "docker load -i nginx.tgz"
+		self.ssh_cmd(ip,"root","password",cmd)
+
+		cmd = "docker load -i ekos-mysql.tgz"
 		self.ssh_cmd(ip,"root","password",cmd)
 
 		cmd = "docker login registry.ekos.local -uadmin -padmin12345"
 		self.ssh_cmd(ip,"root","password",cmd)
 
 		cmd = "docker push registry.ekos.local/library/stress_centos:latest"
+		self.ssh_cmd(ip,"root","password",cmd)
+
+		cmd = "docker push registry.ekos.local/library/apache-client:latest"
+		self.ssh_cmd(ip,"root","password",cmd)
+
+		cmd = "docker push registry.ekos.local/library/apache-server:latest"
+		self.ssh_cmd(ip,"root","password",cmd)
+
+		cmd = "docker push registry.ekos.local/library/nginx:latest"
+		self.ssh_cmd(ip,"root","password",cmd)
+
+		cmd = "docker push registry.ekos.local/library/ekos-mysql:latest"
 		self.ssh_cmd(ip,"root","password",cmd)
 		return True
 
