@@ -882,7 +882,7 @@ class Utils:
 			self.remove_all_nfs(ip,namespace=tenant)
 
 		self.delete_all_tenant(ip)
-		self.delete_stress_images(ip)
+		#self.delete_stress_images(ip)
 		self.delete_all_created_registry(ip)
 		self.delete_all_created_users(ip)
 		return True
@@ -1194,7 +1194,7 @@ class Utils:
 	def delete_all_created_registry(self,ip):
 		registry_list = self.get_all_registry(ip)
 		for registry in registry_list:
-			if registry != "library":
+			if registry != "library" and registry != "default":
 				self.delete_registry(ip,registry)
 		return True
 
