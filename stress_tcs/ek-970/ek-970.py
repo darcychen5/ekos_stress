@@ -74,6 +74,16 @@ def run_test():
 	if rtn != True:
 		return False
 
+
+	#delete app
+	rtn = my_utils.delete_all_app(ip)
+	if rtn != True:
+		return False
+	my_utils.bar_sleep(120)
+	#delete images
+	rtn = my_utils.delete_stress_images(ip)
+	if rtn != True:
+		return False
 	return True
 
 #main

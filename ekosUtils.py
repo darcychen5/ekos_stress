@@ -628,7 +628,7 @@ class Utils:
 	def check_node_ready(self,ip,username,password):
 		node_list = self.get_nodes(ip,username,password)
 		for node in node_list:
-			cmd = "kubectl get nodes | grep " + node + "|grep Ready"
+			cmd = "kubectl get nodes | grep -w " + node + "|grep -w Ready"
 			rtn = self.ssh_cmd(ip,username,password,cmd)
 			if rtn['stdout'] == "":
 				error("%s is not ready!" % node)
@@ -704,6 +704,8 @@ class Utils:
 		cmd = "docker push registry.ekos.local/library/apache-server:latest"
 		self.ssh_cmd(ip,"root","password",cmd)
 
+		cmd = "docker tag nginx:latest registry.ekos.local/library/nginx:latest"
+		self.ssh_cmd(ip,"root","password",cmd)
 		cmd = "docker push registry.ekos.local/library/nginx:latest"
 		self.ssh_cmd(ip,"root","password",cmd)
 

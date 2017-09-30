@@ -5,6 +5,8 @@ configfile = "/root/ekos_stress/install/config.ini"
 
 my_utils = ekosUtils.Utils()
 
+debug_mode = True
+
 refresh_testbed = False
 my_testbed = {}
 if len(sys.argv) == 4:
@@ -68,13 +70,24 @@ log_dir = "/var/log/"
 test_result = {}
 success_case_num = 0
 failed_case_num = 0
+failed_flag = 0
 
 for tc in os.listdir(workdir):
-
 	flag = 0
 	path = os.path.join(workdir, tc)
 	tc_name = tc.split('.')[-2]
 	test_result[tc_name] = {}
+	if debug_mode:
+		if failed_flag == 1:
+			start_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
+			end_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
+			test_result[tc_name]['tc_id'] = tc_name
+			test_result[tc_name]['start_time'] = start_time
+			test_result[tc_name]['end_time'] = end_time	
+			test_result[tc_name]['failed_cycle'] = '-'
+			test_result[tc_name]['result'] = 'NA'
+			break
+
 	logname = log_dir + tc_name + ".log"
 	cmd = "unbuffer python " + path + " " + master_ip + " " + testbed_name + " >" + logname
 	start_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
@@ -90,19 +103,28 @@ for tc in os.listdir(workdir):
 		info(line)
 		if re.search('ok',line):
 			info('testcase: %s execute %d successfully' % (tc_name,i))
+			#clean testbed
+			my_utils.clean_testbed(master_ip)
+
 		else:
 			info('testcase %s execute %d failed!' % (tc_name,i))
 			flag = 1
+			failed_flag = 1
+			if not debug_mode:
+				#clean_testbed
+				my_utils.clean_testbed(master_ip)
+		if flag == 1:
 			break
 		if i != cycle_number:
 			my_utils.bar_sleep(300)
+	my_utils.bar_sleep(300)
 
 	end_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
 	test_result[tc_name]['tc_id'] = tc_name
 	test_result[tc_name]['start_time'] = start_time
 	test_result[tc_name]['end_time'] = end_time
 	if flag == 0:
-		test_result[tc_name]['failed_cycle'] = 'NA'
+		test_result[tc_name]['failed_cycle'] = '-'
 		test_result[tc_name]['result'] = "success"
 		success_case_num = success_case_num + 1
 	else:

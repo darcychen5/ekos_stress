@@ -4,8 +4,9 @@ from log import *
 import ekosUtils
 my_utils = ekosUtils.Utils()
 ip = sys.argv[1]
+lb_name = "lb-tt"
 
-rtn = my_utils.download_upload_img(ip)
+rtn = my_utils.delete_all_tenant(ip)
 print rtn
 
 

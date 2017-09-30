@@ -4,7 +4,7 @@ import ekosUtils
 from log import *
 ip = sys.argv[1]
 my_utils = ekosUtils.Utils()
-svc_num = 300
+svc_num = 200
 app_stack_name = "stress-app"
 svc_name_tmp = "stress-nginx-"
 lb_name = "stress-nginx-lb"
@@ -80,7 +80,7 @@ def run_test():
         lb_hostip = my_utils.get_lb_hostip(ip,lb_name)
         for i in range(10):
                 port = random.randint(httprule_port_tmp,httprule_port_tmp+svc_num)
-                cmd = 'ab -c 1000 -n 5000 http:// %s'%lb_hostip + ':' + port
+                cmd = 'ab -c 1000 -n 5000 http://%s:%s/' % (lb_hostip[0],str(port))
                 my_utils.runcmd(cmd)
 
 

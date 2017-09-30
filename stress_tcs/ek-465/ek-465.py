@@ -7,9 +7,11 @@ my_utils = ekosUtils.Utils()
 lb_name = "stress-lb"
 app_name = "stress-app"
 stress_svcname_tmp = "stress-bootstorm-lb-"
-svc_num = 300
+svc_num = 200
+
 ip = sys.argv[1]
-node_list = eval(my_utils._get_config(testbed,"node_name_list","/root/ekos_stress/install/config.ini")) 
+testbed = sys.argv[2]
+
 
 def run_test():
 	#create stress_app
